@@ -1,0 +1,11 @@
+(function(){
+  window.AppState=window.AppState||{
+    currentTab:'dash',
+    selectedPlanIndex:null,
+    filters:null,
+    sort:null,
+    shortlist:null,
+    market:{status:'closed',lastUpdated:null},
+    analyzer:{recent:[]}
+  };
+})();
