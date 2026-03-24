@@ -1,0 +1,12 @@
+{
+  "generatedAt": "2026-03-24",
+  "planCount": 4345,
+  "baseSource": "FY2024 DOL 5500/5500-SF",
+  "overlaySource": "Early FY2025 overlay",
+  "notes": [
+    "Contributions coverage ~94%",
+    "Fees from Schedule C subset",
+    "Industry from NAICS subset",
+    "TDF inference from RK mapping subset"
+  ]
+}
