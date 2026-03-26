@@ -1556,8 +1556,23 @@ function setMapCityHover(city){
    if(hot){layer.bringToFront();layer.openTooltip()}else{layer.closeTooltip()}
  }
 }
-var tabIds=['dash','tbl','pipe','hm','analyze','today','news','alerts','templates'];var tabsEl=document.getElementById('tabs');
-['OVERVIEW','PROSPECTS','PIPELINE','GEO MAP','FILING ANALYZER','TODAY','NEWS','ALERTS','TEMPLATES'].forEach(function(nm,i){var b=document.createElement('button');b.className='tab'+(i===0?' active':'');b.textContent=nm;b.dataset.tab=tabIds[i];b.addEventListener('click',function(){go(this.dataset.tab)});tabsEl.appendChild(b)});
+var TAB_DEFS=[
+  {id:'dash',label:'OVERVIEW',title:'Overview'},
+  {id:'tbl',label:'PROSPECTS',title:'Prospects'},
+  {id:'pipe',label:'PIPELINE',title:'Pipeline'},
+  {id:'hm',label:'GEO MAP',title:'Geo Map'},
+  {id:'analyze',label:'FILING ANALYZER',title:'Filing Analyzer'},
+  {id:'today',label:'TODAY',title:'Today'},
+  {id:'news',label:'NEWS',title:'News'},
+  {id:'alerts',label:'ALERTS',title:'Alerts'},
+  {id:'templates',label:'TEMPLATES',title:'Templates'}
+];
+var TAB_ID_ORDER=TAB_DEFS.map(function(t){return t.id});
+var TAB_TITLE_BY_ID=TAB_DEFS.reduce(function(acc,t){acc[t.id]=t.title;return acc},{});
+var TAB_RENDERERS={dash:rDash,tbl:rTbl,pipe:rPipe,hm:rHM,analyze:rAnalyze,today:rToday,news:rNews,alerts:rAlerts,templates:rTemplates};
+var tabsEl=document.getElementById('tabs');
+TAB_DEFS.forEach(function(tab,i){var b=document.createElement('button');b.className='tab'+(i===0?' active':'');b.textContent=tab.label;b.dataset.tab=tab.id;b.addEventListener('click',function(){go(this.dataset.tab)});tabsEl.appendChild(b)});
+var PANELS_BY_TAB=TAB_ID_ORDER.reduce(function(acc,id){acc[id]=document.getElementById('p-'+id);return acc},{});
 
 // --- Tab Navigation ---
 function go(t){
@@ -1565,18 +1580,9 @@ if(document.getElementById('dtl').classList.contains('open'))cD();
 document.body.classList.toggle('hm-lock',t==='hm');
 ct=t;
 document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('active',b.dataset.tab===t)});
-document.querySelectorAll('.panel').forEach(function(p,i){p.classList.toggle('active',tabIds[i]===t)});
-var titles={analyze:'Filing Analyzer',dash:'Overview',tbl:'Prospects',pipe:'Pipeline',hm:'Geo Map',today:'Today',news:'News',alerts:'Alerts',templates:'Templates'};
-document.title=(titles[t]||'Mammini')+' | Mammini 401k Prospector';
-if(t==='analyze')rAnalyze();
-if(t==='dash')rDash();
-if(t==='tbl')rTbl();
-if(t==='hm')rHM();
-if(t==='pipe')rPipe();
-if(t==='today')rToday();
-if(t==='news')rNews();
-if(t==='alerts')rAlerts();
-if(t==='templates')rTemplates()
+for(var panelId in PANELS_BY_TAB){if(PANELS_BY_TAB[panelId])PANELS_BY_TAB[panelId].classList.toggle('active',panelId===t)}
+document.title=(TAB_TITLE_BY_ID[t]||'Mammini')+' | Mammini 401k Prospector';
+if(TAB_RENDERERS[t])TAB_RENDERERS[t]()
 }
 function pn(v){var s=String(v).replace(/[$,\s]/g,'');var n=parseFloat(s)||0;var lc=String(v).toLowerCase();if(lc.indexOf('b')>=0)n*=1e9;else if(lc.indexOf('m')>=0)n*=1e6;else if(lc.indexOf('k')>=0)n*=1e3;return n}
 
@@ -3689,7 +3695,7 @@ function openSettings(){
 
   h+='<div style="display:flex;gap:8px;margin:16px 0"><button class="btn btn-grn" id="scoreApply" style="flex:1;padding:10px;font-size:12px">APPLY & RESCORE ALL PLANS</button><button class="btn" id="scoreReset" style="padding:10px;font-size:11px">RESET DEFAULTS</button></div>';
 
-  h+='<div class="settings-section" style="margin-bottom:0"><div class="settings-section-title">Keyboard Shortcuts</div><div style="display:grid;grid-template-columns:auto 1fr auto 1fr;gap:5px 12px;font-size:11px;color:var(--tx2)"><span class="kbd" style="background:var(--bg4);border:1px solid var(--brd);color:var(--tx2)">Esc</span><span>Close panels</span><span class="kbd" style="background:var(--bg4);border:1px solid var(--brd);color:var(--tx2)">D</span><span>Dark mode</span><span class="kbd" style="background:var(--bg4);border:1px solid var(--brd);color:var(--tx2)">/</span><span>Focus search</span><span class="kbd" style="background:var(--bg4);border:1px solid var(--brd);color:var(--tx2)">1-9</span><span>Switch tabs</span></div></div>';
+  h+='<div class="settings-section" style="margin-bottom:0"><div class="settings-section-title">Keyboard Shortcuts</div><div style="display:grid;grid-template-columns:auto 1fr auto 1fr;gap:5px 12px;font-size:11px;color:var(--tx2)"><span class="kbd" style="background:var(--bg4);border:1px solid var(--brd);color:var(--tx2)">Esc</span><span>Close panels</span><span class="kbd" style="background:var(--bg4);border:1px solid var(--brd);color:var(--tx2)">D</span><span>Dark mode</span><span class="kbd" style="background:var(--bg4);border:1px solid var(--brd);color:var(--tx2)">/</span><span>Focus search</span><span class="kbd" style="background:var(--bg4);border:1px solid var(--brd);color:var(--tx2)">1-'+TAB_ID_ORDER.length+'</span><span>Switch tabs</span></div></div>';
   h+='<div style="padding-top:10px;border-top:1px solid var(--brd);font-size:9px;color:var(--tx3);text-align:center;margin-top:12px">Mammini 401(k) Prospector \xb7 San Diego County \xb7 FY 2024/25</div></div>';
 
   ov.innerHTML=h;
@@ -3767,9 +3773,9 @@ document.addEventListener('keydown',function(e){
     return;
   }
 
-  if(e.key>='1'&&e.key<='9'&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
-    var tabs=['dash','tbl','pipe','hm','analyze','today','news','alerts','templates'];
-    go(tabs[parseInt(e.key)-1]);
+  var maxTabShortcut=Math.min(9,TAB_ID_ORDER.length);
+  if(e.key>='1'&&e.key<=String(maxTabShortcut)&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
+    go(TAB_ID_ORDER[parseInt(e.key,10)-1]);
     e.preventDefault();
     return;
   }
