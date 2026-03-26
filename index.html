@@ -1373,6 +1373,20 @@ function refreshWorkspaceChrome(){
   if(regionEl)regionEl.textContent=(UI_PREFS.homeRegion||'San Diego County').toUpperCase();
 }
 var pipeline={},pipelineFilter='all',pipelineSearch='',draggedPipelineEin='';
+var alertsFilter='open';
+var alertState=(function(){
+  try{return JSON.parse(localStorage.getItem('mammini_alert_state')||'{}')||{}}catch(e){return {}}
+})();
+function alertKey(alert){return (alert.ein||'')+'|'+(alert.label||'')+'|'+(alert.severity||'')}
+function getAlertStatus(alert){
+  var k=alertKey(alert);
+  return (alertState[k]&&alertState[k].status)||'new';
+}
+function setAlertStatus(alert,status){
+  var k=alertKey(alert);
+  alertState[k]={status:status,updatedAt:Date.now()};
+  try{localStorage.setItem('mammini_alert_state',JSON.stringify(alertState))}catch(e){}
+}
 var PIPELINE_STAGES=[{id:'new',label:'New'},{id:'qualified',label:'Qualified'},{id:'priority',label:'Priority'},{id:'contacted',label:'Contacted'},{id:'meeting',label:'Meeting'},{id:'closed',label:'Closed / Lost'}];
 var DASH_SIGNAL_META={HGR:{label:'High Growth',desc:'Expanding needs'},NSH:{label:'No Safe Harbor',desc:'Design opening'},HBL:{label:'High Balances',desc:'Fee/value review'}};
 function dashSignalMatch(p,sig){var s=(p[11]||'').split(',');return s.indexOf(sig)>=0}
@@ -2299,14 +2313,32 @@ function rAlerts(){
     if(!p[13])alerts.push({severity:'Medium',label:'Missing filing URL',detail:p[0]+' · needs fallback filing retrieval',ein:p[14]});
   }
   alerts=alerts.slice(0,40);
+  var counts={new:0,snoozed:0,resolved:0};
+  for(i=0;i<alerts.length;i++){var st=getAlertStatus(alerts[i]);if(counts[st]!=null)counts[st]++}
+  var shown=alerts.filter(function(a){
+    var st=getAlertStatus(a);
+    if(alertsFilter==='all')return true;
+    if(alertsFilter==='open')return st!=='resolved';
+    return st===alertsFilter;
+  });
   var h='';
-  h+='<div class="module-shell"><div class="module-hero"><div class="module-kicker">Signal monitor</div><div class="module-title">Alerts</div><div class="module-sub">Recommended direction: centralize proactive triggers so advisors don’t have to hunt manually for fee, growth, filing, and provider-change events.</div></div>';
+  h+='<div class="module-shell"><div class="module-hero"><div class="module-kicker">Signal monitor</div><div class="module-title">Alerts</div><div class="module-sub">Track issues in a triage workflow built for '+H(UI_PREFS.advisorName)+': prioritize, snooze, resolve, and return to high-value opportunities faster.</div></div>';
   h+='<div class="module-grid"><div class="module-card"><h4>Recommended buildout</h4><ul class="module-list"><li>Introduce alert rules by threshold with snooze/resolve workflow.</li><li>Add ownership + SLA timer per alert.</li><li>Push important alerts into Today tab automatically.</li></ul></div>';
-  h+='<div class="module-card"><h4>Current generated alerts</h4><p>Rule-based sample alerts from currently loaded plan data.</p>';
-  if(!alerts.length)h+='<p>No alerts triggered with current thresholds.</p>';
-  for(i=0;i<alerts.length;i++){var al=alerts[i],sevColor=al.severity==='High'?'var(--coral)':'var(--acc2)';h+='<div class="module-row"><div><strong>'+H(al.label)+'</strong><span>'+H(al.detail)+'</span></div><button class="btn" data-open-alert="'+H(al.ein)+'" style="font-size:9px;padding:6px 10px;border-color:'+sevColor+';color:'+sevColor+'">OPEN</button></div>'}
+  h+='<div class="module-card"><h4>Current generated alerts</h4><p>Rule-based alerts with advisor triage state.</p>';
+  h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 10px"><button class="pipe-pill'+(alertsFilter==='open'?' active':'')+'" data-af=\"open\">Open <span class=\"ct\">'+(counts.new+counts.snoozed)+'</span></button><button class="pipe-pill'+(alertsFilter==='new'?' active':'')+'" data-af=\"new\">New <span class=\"ct\">'+counts.new+'</span></button><button class="pipe-pill'+(alertsFilter==='snoozed'?' active':'')+'" data-af=\"snoozed\">Snoozed <span class=\"ct\">'+counts.snoozed+'</span></button><button class="pipe-pill'+(alertsFilter==='resolved'?' active':'')+'" data-af=\"resolved\">Resolved <span class=\"ct\">'+counts.resolved+'</span></button><button class="pipe-pill'+(alertsFilter==='all'?' active':'')+'" data-af=\"all\">All <span class=\"ct\">'+alerts.length+'</span></button></div>';
+  if(!shown.length)h+='<p>No alerts in this state right now.</p>';
+  for(i=0;i<shown.length;i++){
+    var al=shown[i],sevColor=al.severity==='High'?'var(--coral)':'var(--acc2)',status=getAlertStatus(al),statusColor=status==='resolved'?'var(--teal)':status==='snoozed'?'var(--tx3)':'var(--coral)';
+    h+='<div class="module-row"><div><strong>'+H(al.label)+'</strong><span>'+H(al.detail)+' · <b style="color:'+statusColor+'">'+status.toUpperCase()+'</b></span></div><div style="display:flex;gap:4px;flex-wrap:wrap"><button class="btn" data-open-alert="'+H(al.ein)+'" style="font-size:9px;padding:6px 10px;border-color:'+sevColor+';color:'+sevColor+'">OPEN</button><button class="btn" data-alert-state="snoozed" data-alert-ein="'+H(al.ein)+'" data-alert-label="'+H(al.label)+'" data-alert-sev="'+H(al.severity)+'" style="font-size:9px;padding:6px 10px">SNOOZE</button><button class="btn" data-alert-state="resolved" data-alert-ein="'+H(al.ein)+'" data-alert-label="'+H(al.label)+'" data-alert-sev="'+H(al.severity)+'" style="font-size:9px;padding:6px 10px">RESOLVE</button><button class="btn" data-alert-state="new" data-alert-ein="'+H(al.ein)+'" data-alert-label="'+H(al.label)+'" data-alert-sev="'+H(al.severity)+'" style="font-size:9px;padding:6px 10px">RESET</button></div></div>';
+  }
   h+='</div></div></div>';
   el.innerHTML=h;
+  document.querySelectorAll('[data-af]').forEach(function(btn){btn.addEventListener('click',function(){alertsFilter=this.dataset.af||'open';rAlerts()})});
+  document.querySelectorAll('[data-alert-state]').forEach(function(btn){btn.addEventListener('click',function(){
+    var alert={ein:this.dataset.alertEin||'',label:this.dataset.alertLabel||'',severity:this.dataset.alertSev||''};
+    setAlertStatus(alert,this.dataset.alertState||'new');
+    rAlerts();
+  })});
   document.querySelectorAll('[data-open-alert]').forEach(function(btn){btn.addEventListener('click',function(){var plan=getPlanByEin(this.dataset.openAlert);if(plan){go('tbl');oD(D.indexOf(plan),D)}})});
 }
 function rTemplates(){
