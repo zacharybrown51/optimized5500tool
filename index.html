@@ -25,16 +25,23 @@
 body{font-family:'Jost',sans-serif;background:radial-gradient(circle at top left,rgba(26,141,255,.12),transparent 24%),radial-gradient(circle at top right,rgba(34,184,166,.10),transparent 20%),linear-gradient(180deg,#f6f9fc 0%,#eef4fb 100%);color:var(--tx);min-height:100vh;font-size:13px;padding-top:64px}
 body.hm-lock{overflow:hidden}
 .app{display:flex;flex-direction:column;min-height:100vh;height:auto;min-width:1024px}
+.app-shell{display:flex;flex:1;min-height:calc(100vh - 64px)}
 body.hm-lock .app{height:calc(100dvh - 64px);min-height:calc(100dvh - 64px)}
 .hdr{background:linear-gradient(90deg,#0f2233 0%,#163247 55%,#18394f 100%);border-bottom:1px solid rgba(255,255,255,.08);padding:0 18px;display:flex;align-items:center;height:64px;flex-shrink:0;gap:14px;box-shadow:0 14px 34px rgba(9,22,33,.26);position:fixed;top:0;left:0;right:0;z-index:5000}
 .hdr-logo{display:flex;align-items:center;gap:10px}
 .hdr-logo img{height:24px}
 .hdr-logo span{font-family:'Jost',sans-serif;font-size:14px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#f5efe7}
 .hdr-sep{width:1px;height:22px;background:rgba(255,255,255,.2)}
-.tabs{display:flex;align-self:stretch}.tab{padding:0 18px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:#8a9aa6;cursor:pointer;border:none;background:none;font-family:'Jost',sans-serif;border-bottom:2px solid transparent;transition:all .15s;height:100%;display:flex;align-items:center}
-.tab:hover{color:#c8d4de}.tab.active{color:#3eaac4;border-bottom-color:#118aa9}
+.side-nav{width:230px;flex:0 0 230px;border-right:1px solid var(--brd);background:linear-gradient(180deg,rgba(255,255,255,.85),rgba(247,251,255,.8));backdrop-filter:blur(8px);padding:12px 10px;transition:width .2s ease;overflow:hidden}
+.side-nav.collapsed{width:62px;flex-basis:62px}
+.side-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid var(--brd);background:var(--bg3);border-radius:10px;font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--tx3);font-family:Jost,sans-serif;cursor:pointer;margin-bottom:10px}
+.side-nav.collapsed .side-toggle span{display:none}
+.tabs{display:flex;flex-direction:column;gap:6px}.tab{padding:10px 12px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#6d8090;cursor:pointer;border:1px solid transparent;background:none;font-family:'Jost',sans-serif;border-radius:10px;transition:all .15s;text-align:left}
+.tab:hover{color:#21445c;background:rgba(17,138,169,.06);border-color:rgba(17,138,169,.14)}.tab.active{color:#118aa9;background:rgba(17,138,169,.1);border-color:rgba(17,138,169,.24)}
+.side-nav.collapsed .tab{font-size:0;padding:10px 8px;position:relative}
+.side-nav.collapsed .tab::before{content:attr(data-short);font-size:9px;color:inherit}
 .hdr-right{margin-left:auto;display:flex;align-items:center;gap:16px}.hdr-stat{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.6px;color:#8a9aa6;font-weight:500}.hdr-stat b{color:#b8c8d4;font-family:'IBM Plex Mono',monospace;font-weight:600}
-.market-strip{display:flex;align-items:center;gap:7px;position:relative}
+.market-strip{display:flex;align-items:center;gap:9px;position:relative;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#9fb5c6}
 .market-live{display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:20px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}
 .market-live-dot{width:6px;height:6px;border-radius:50%;background:#53d3b0;box-shadow:0 0 6px rgba(83,211,176,.6);animation:mktPulse 2s ease-in-out infinite}
 .market-live-text{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5)}
@@ -43,36 +50,14 @@ body.hm-lock .app{height:calc(100dvh - 64px);min-height:calc(100dvh - 64px)}
 .market-live.mkt-prepost .market-live-dot{background:#f5a623;box-shadow:0 0 6px rgba(245,166,35,.5);animation:mktPulse 3s ease-in-out infinite}
 .market-live.mkt-prepost .market-live-text{color:rgba(255,255,255,.5)}
 @keyframes mktPulse{0%,100%{opacity:1;box-shadow:0 0 6px rgba(83,211,176,.6)}50%{opacity:.4;box-shadow:0 0 2px rgba(83,211,176,.2)}}
-@keyframes mktFadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
-.market-card{min-width:148px;padding:8px 11px 7px;border-radius:14px;border:1px solid rgba(255,255,255,.10);background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.05));backdrop-filter:blur(10px);box-shadow:inset 0 1px 0 rgba(255,255,255,.05);transition:all .25s ease;cursor:pointer;position:relative}
-.market-card:hover{background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.08));border-color:rgba(255,255,255,.18);transform:translateY(-1px)}
-.market-card.mkt-loaded{animation:mktFadeIn .5s ease both}
-.market-card:nth-child(2).mkt-loaded{animation-delay:.08s}
-.market-card:nth-child(3).mkt-loaded{animation-delay:.16s}
-.market-card:nth-child(4).mkt-loaded{animation-delay:.24s}
-.market-label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
-.market-label{font-family:'Jost',sans-serif;font-size:9.5px;letter-spacing:.9px;text-transform:uppercase;color:#9fb5c6;font-weight:600}
-.market-spark{height:18px;width:48px;display:inline-block;vertical-align:middle}
-.market-value-row{display:flex;align-items:baseline;gap:6px}
-.market-price{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#edf6fd}
-.market-change{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700}
-.market-pts{font-family:'IBM Plex Mono',monospace;font-size:9px;color:rgba(255,255,255,.35);margin-left:2px}
+.market-inline{display:inline-flex;align-items:baseline;gap:5px;padding:4px 8px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08)}
+.market-inline-label{font-size:9px;letter-spacing:.8px;text-transform:uppercase;color:#9fb5c6;font-family:Jost,sans-serif}
+.market-inline-price{font-size:11px;color:#edf6fd}
+.market-inline-change{font-size:10px;font-weight:700}
 .text-green{color:#53d3b0;text-shadow:0 0 8px rgba(83,211,176,.3)}
 .text-red{color:#ff8a76;text-shadow:0 0 8px rgba(255,138,118,.3)}
-.market-loading .market-price,.market-loading .market-change{color:#8aa0b1}
-.market-ts{font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:rgba(255,255,255,.3);letter-spacing:.3px;margin-top:2px}
-.market-arrow{font-size:8px;margin-right:1px}
-.market-detail{display:none;position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1a2e3b;border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:12px 14px;min-width:200px;z-index:6000;box-shadow:0 12px 32px rgba(0,0,0,.4)}
-.market-detail.mkt-detail-open{display:block}
-.market-detail-row{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(255,255,255,.6);padding:3px 0}
-.market-detail-row span:last-child{color:#edf6fd;font-weight:600}
-.market-detail-spark{height:36px;width:100%;margin-top:6px}
-.market-value-row{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-top:4px}
-.market-price{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;color:#edf6fd}
-.market-change{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700}
-.text-green{color:#53d3b0;text-shadow:0 0 8px rgba(83,211,176,.3)}
-.text-red{color:#ff8a76;text-shadow:0 0 8px rgba(255,138,118,.3)}
-.market-loading .market-price,.market-loading .market-change{color:#8aa0b1}
+.market-inline.na .market-inline-price,.market-inline.na .market-inline-change{color:#8aa0b1}
+.content-shell{flex:1;overflow:auto}
 .main{flex:1;overflow:visible;display:block}.panel{display:none;overflow:visible}.panel.active{display:block}
 .hero{display:flex;gap:14px;border-bottom:1px solid transparent;padding:16px 18px 8px;background:linear-gradient(180deg,rgba(255,255,255,.42),rgba(255,255,255,0))}
 .hero-cell{flex:1;padding:24px 28px;border:1px solid var(--brd);position:relative;overflow:hidden;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(245,250,255,.78));backdrop-filter:blur(10px);box-shadow:var(--shadow-sm)}
@@ -602,6 +587,22 @@ body.has-news-ticker .news-ticker{top:64px}
 .dark-toggle:hover{background:rgba(255,255,255,.12);color:#edf6fd;border-color:rgba(255,255,255,.22)}
 .dark-toggle svg{width:16px;height:16px;fill:currentColor}
 
+.module-shell{padding:18px;display:flex;flex-direction:column;gap:14px}
+.module-hero{border:1px solid var(--brd);border-radius:16px;padding:16px 18px;background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(242,248,255,.9));box-shadow:var(--shadow-sm)}
+.module-kicker{font-family:Jost,sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--acc2);font-weight:700;margin-bottom:6px}
+.module-title{font-family:Jost,sans-serif;font-size:24px;line-height:1.1;color:var(--txh);font-weight:700}
+.module-sub{font-family:Jost,sans-serif;font-size:12px;line-height:1.6;color:var(--tx2);margin-top:7px}
+.module-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.module-card{border:1px solid var(--brd);border-radius:14px;padding:13px;background:var(--bg3)}
+.module-card h4{margin:0 0 6px;font-family:Jost,sans-serif;font-size:12px;color:var(--txh)}
+.module-card p{margin:0;font-family:Jost,sans-serif;font-size:11px;color:var(--tx2);line-height:1.55}
+.module-list{margin:8px 0 0;padding-left:16px}
+.module-list li{font-family:Jost,sans-serif;font-size:10.5px;color:var(--tx2);line-height:1.55}
+.module-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border-radius:10px;border:1px solid var(--brd);background:rgba(17,138,169,.04);margin-top:8px}
+.module-row strong{font-family:Jost,sans-serif;font-size:11px;color:var(--txh)}
+.module-row span{font-family:Jost,sans-serif;font-size:10px;color:var(--tx3)}
+@media (max-width:950px){.module-grid{grid-template-columns:1fr}}
+
 /* Settings overlay */
 .settings-ov{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);z-index:6000;display:none;align-items:center;justify-content:center}
 .settings-ov.open{display:flex}
@@ -663,9 +664,8 @@ body:not(.dark) .kbd{background:var(--bg4);border-color:var(--brd);color:var(--t
 </head>
 <body>
 <div class="toast-container" id="toastBox"></div>
-<div class="app"><div class="hdr"><div class="hdr-logo" style="cursor:pointer" id="logoHome"><span style="font-family:Jost,sans-serif;font-size:14px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:#f5efe7">MAMMINI</span></div><div class="hdr-sep"></div><div class="tabs" id="tabs"></div><div class="hdr-right"><div class="market-strip" id="marketStrip"><div class="market-live" id="mktLiveTag" style="display:none"><div class="market-live-dot"></div><div class="market-live-text">Live</div></div><div class="market-card market-loading"><div class="market-label">S&amp;P 500</div><div class="market-value-row"><span class="market-price">--</span><span class="market-change">--</span></div></div><div class="market-card market-loading"><div class="market-label">Dow</div><div class="market-value-row"><span class="market-price">--</span><span class="market-change">--</span></div></div><div class="market-card market-loading"><div class="market-label">Nasdaq</div><div class="market-value-row"><span class="market-price">--</span><span class="market-change">--</span></div></div></div><span class="hdr-stat">SAN DIEGO COUNTY</span><span class="hdr-stat"><b>4,345</b> PLANS</span><span class="hdr-stat">FY <b>2024/25</b></span><span class="hdr-stat" style="cursor:help" title="Base: FY2024 DOL data (filed through Oct 2025). Overlay: 177 early FY2025 filers (Jan-Feb 2026). Contributions: 94% coverage. Industry: 76% coverage. Fee data: Schedule C for 690 audited plans.">&#9432; Data</span><button class="dark-toggle" id="settingsBtn" title="Settings"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97s-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1s.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64L19.43 12.97z" fill="currentColor"/></svg></button><span class="hdr-stat" id="hdrShortlistStat" style="display:none;cursor:pointer" title="Click to view shortlist"></span><span class="hdr-stat" id="hdrPipelineStat" style="display:none;cursor:pointer" title="Click to view pipeline"></span></div></div>
-<div class="news-ticker" id="newsTicker"><div class="news-ticker-inner" id="newsTickerInner"></div></div>
-<div class="main"><div class="panel active" id="p-dash"></div><div class="panel" id="p-tbl"></div><div class="panel" id="p-pipe"></div><div class="panel" id="p-hm"></div><div class="panel" id="p-analyze"></div></div></div>
+<div class="app"><div class="hdr"><div class="hdr-logo" style="cursor:pointer" id="logoHome"><span style="font-family:Jost,sans-serif;font-size:14px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:#f5efe7">MAMMINI</span></div><div class="hdr-sep"></div><div class="hdr-right"><div class="market-strip" id="marketStrip"></div><span class="hdr-stat">SAN DIEGO COUNTY</span><span class="hdr-stat"><b>4,345</b> PLANS</span><span class="hdr-stat">FY <b>2024/25</b></span><span class="hdr-stat" style="cursor:help" title="Base: FY2024 DOL data (filed through Oct 2025). Overlay: 177 early FY2025 filers (Jan-Feb 2026). Contributions: 94% coverage. Industry: 76% coverage. Fee data: Schedule C for 690 audited plans.">&#9432; Data</span><button class="dark-toggle" id="settingsBtn" title="Settings"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97s-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1s.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.58 1.69-.98l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64L19.43 12.97z" fill="currentColor"/></svg></button><span class="hdr-stat" id="hdrShortlistStat" style="display:none;cursor:pointer" title="Click to view shortlist"></span><span class="hdr-stat" id="hdrPipelineStat" style="display:none;cursor:pointer" title="Click to view pipeline"></span></div></div>
+<div class="app-shell"><aside class="side-nav" id="sideNav"><button class="side-toggle" id="sideToggle"><span>Navigation</span>☰</button><div class="tabs" id="tabs"></div></aside><div class="content-shell"><div class="main"><div class="panel" id="p-dash"></div><div class="panel" id="p-tbl"></div><div class="panel" id="p-pipe"></div><div class="panel" id="p-hm"></div><div class="panel" id="p-analyze"></div><div class="panel active" id="p-today"></div><div class="panel" id="p-news"></div><div class="panel" id="p-alerts"></div><div class="panel" id="p-templates"></div></div></div></div></div>
 <div class="compare-ov" id="compareOv"><div class="compare-c" id="compareContent"></div></div>
 <div class="dtl" id="dtl"></div>
 <div class="snap-ov" id="snap"></div>
@@ -1136,42 +1136,16 @@ function buildSparkSVG(data, w, h, color) {
     + '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + color + '" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>'
     + '</svg>';
 }
-function marketCardHTML(item, quote) {
+function marketInlineHTML(item, quote) {
   quote = quote || {};
   var pct = Number(quote.changesPercentage);
   var cls = isFinite(pct) ? (pct >= 0 ? 'text-green' : 'text-red') : '';
-  var arrow = isFinite(pct) ? (pct >= 0 ? '<span class="market-arrow">&#9650;</span>' : '<span class="market-arrow">&#9660;</span>') : '';
-  var loaded = quote.symbol ? 'mkt-loaded' : 'market-loading';
-  var sparkColor = isFinite(pct) ? (pct >= 0 ? '#53d3b0' : '#ff8a76') : '#8aa0b1';
-  var sparkHtml = (quote.sparkline && quote.sparkline.length > 1) ? '<div class="market-spark">' + buildSparkSVG(quote.sparkline, 48, 18, sparkColor) + '</div>' : '';
-  var bigSparkHtml = (quote.sparkline && quote.sparkline.length > 1) ? '<div class="market-detail-spark">' + buildSparkSVG(quote.sparkline, 172, 36, sparkColor) + '</div>' : '';
-  var changePts = quote.change != null ? (quote.change >= 0 ? '+' : '') + quote.change.toFixed(2) : '';
-
-  var detail = '<div class="market-detail">';
-  detail += '<div class="market-detail-row"><span>Previous Close</span><span>' + (quote.previousClose ? fmtMarketPrice(quote.previousClose) : '--') + '</span></div>';
-  detail += '<div class="market-detail-row"><span>Change</span><span class="' + cls + '">' + (changePts || '--') + '</span></div>';
-  detail += '<div class="market-detail-row"><span>Change %</span><span class="' + cls + '">' + (isFinite(pct) ? (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%' : '--') + '</span></div>';
-  if (quote.sparkline && quote.sparkline.length > 1) {
-    var sparkMin = Math.min.apply(null, quote.sparkline);
-    var sparkMax = Math.max.apply(null, quote.sparkline);
-    detail += '<div class="market-detail-row"><span>5d Range</span><span>' + fmtMarketPrice(sparkMin) + ' – ' + fmtMarketPrice(sparkMax) + '</span></div>';
-  }
-  detail += bigSparkHtml;
-  detail += '</div>';
-
-  return '<div class="market-card ' + loaded + '">'
-    + '<div class="market-label-row"><span class="market-label">' + item.label + '</span>' + sparkHtml + '</div>'
-    + '<div class="market-value-row">'
-    + '<span class="market-price">' + fmtMarketPrice(quote.price) + '</span>'
-    + '<span class="market-change ' + cls + '">' + arrow + fmtMarketPct(quote.changesPercentage) + '</span>'
-    + (changePts ? '<span class="market-pts">' + changePts + '</span>' : '')
-    + '</div>'
-    + detail
-    + '</div>';
+  var arrow = isFinite(pct) ? (pct >= 0 ? '▲' : '▼') : '';
+  var na = quote.symbol ? '' : ' na';
+  return '<div class="market-inline'+na+'"><span class="market-inline-label">'+item.label+'</span><span class="market-inline-price">'+fmtMarketPrice(quote.price)+'</span><span class="market-inline-change '+cls+'">'+arrow+' '+fmtMarketPct(quote.changesPercentage)+'</span></div>';
 }
 var mktStatus='closed';
 var mktLastTs=null;
-var mktFirstRender=true;
 function renderMarketStrip(quotes){
   var strip=document.getElementById('marketStrip');
   if(!strip)return;
@@ -1184,124 +1158,24 @@ function renderMarketStrip(quotes){
   var isPrePost=mktStatus==='prepost';
   var statusLabel=isOpen?'Market Open':isPrePost?'Pre/Post Market':'Market Closed';
   var statusCls=isOpen?'':(isPrePost?'mkt-prepost':'mkt-closed');
-
-  // If first render or no cards exist yet, do full innerHTML
-  var existingCards=strip.querySelectorAll('.market-card');
-  if(mktFirstRender||!existingCards.length||!hasData){
-    var tsLabel='';
-    if(mktLastTs){
-      var d=new Date(mktLastTs*1000);
-      var h2=d.getHours(),m2=d.getMinutes(),ampm2=h2>=12?'PM':'AM';
-      h2=h2%12||12;
-      tsLabel=' \xb7 '+h2+':'+String(m2).padStart(2,'0')+ampm2;
-    }
-    var liveTag=hasData?'<div class="market-live '+statusCls+'"><div class="market-live-dot"></div><div class="market-live-text">'+statusLabel+tsLabel+'</div></div>':'';
-    var cards=MARKET_CONFIG.map(function(item){
-      return marketCardHTML(item, bySymbol[item.symbol]);
-    }).join('');
-    strip.innerHTML=liveTag+cards;
-    mktFirstRender=false;
-    return;
+  var tsLabel='';
+  if(mktLastTs){
+    var d=new Date(mktLastTs*1000);
+    var h=d.getHours(),m=d.getMinutes(),ampm=h>=12?'PM':'AM';
+    h=h%12||12;
+    tsLabel=' · '+h+':'+String(m).padStart(2,'0')+ampm;
   }
-
-  // In-place update: just update text values, no DOM rebuild
-  // Update live tag
-  var liveEl=strip.querySelector('.market-live');
-  if(liveEl){
-    liveEl.className='market-live '+statusCls;
-    var textEl=liveEl.querySelector('.market-live-text');
-    if(textEl){
-      var tsLabel2='';
-      if(mktLastTs){
-        var d2=new Date(mktLastTs*1000);
-        var h3=d2.getHours(),m3=d2.getMinutes(),ampm3=h3>=12?'PM':'AM';
-        h3=h3%12||12;
-        tsLabel2=' \xb7 '+h3+':'+String(m3).padStart(2,'0')+ampm3;
-      }
-      textEl.textContent=statusLabel+tsLabel2;
-    }
-  }
-
-  // Update each market card in place
-  existingCards.forEach(function(card,idx){
-    var item=MARKET_CONFIG[idx];
-    if(!item)return;
-    var quote=bySymbol[item.symbol]||{};
-    var pct=Number(quote.changesPercentage);
-    var cls=isFinite(pct)?(pct>=0?'text-green':'text-red'):'';
-    var arrow=isFinite(pct)?(pct>=0?'\u25B2':'\u25BC'):'';
-    var changePts=quote.change!=null?(quote.change>=0?'+':'')+quote.change.toFixed(2):'';
-
-    // Update price
-    var priceEl=card.querySelector('.market-price');
-    if(priceEl)priceEl.textContent=fmtMarketPrice(quote.price);
-
-    // Update change % with color
-    var changeEl=card.querySelector('.market-change');
-    if(changeEl){
-      changeEl.className='market-change '+cls;
-      changeEl.innerHTML=(arrow?'<span class="market-arrow">'+arrow+'</span>':'')+fmtMarketPct(quote.changesPercentage);
-    }
-
-    // Update pts
-    var ptsEl=card.querySelector('.market-pts');
-    if(ptsEl)ptsEl.textContent=changePts;
-    else if(changePts){
-      var sp=document.createElement('span');
-      sp.className='market-pts';
-      sp.textContent=changePts;
-      var vr=card.querySelector('.market-value-row');
-      if(vr)vr.appendChild(sp);
-    }
-
-    // Update sparkline
-    var sparkEl=card.querySelector('.market-spark');
-    if(sparkEl&&quote.sparkline&&quote.sparkline.length>1){
-      var sparkColor=isFinite(pct)?(pct>=0?'#53d3b0':'#ff8a76'):'#8aa0b1';
-      sparkEl.innerHTML=buildSparkSVG(quote.sparkline,48,18,sparkColor);
-    }
-
-    // Update detail panel if it exists
-    var detailRows=card.querySelectorAll('.market-detail-row');
-    if(detailRows.length>=3){
-      var prevSpan=detailRows[0].querySelector('span:last-child');
-      if(prevSpan)prevSpan.textContent=quote.previousClose?fmtMarketPrice(quote.previousClose):'--';
-      var chgSpan=detailRows[1].querySelector('span:last-child');
-      if(chgSpan){chgSpan.className=cls;chgSpan.textContent=changePts||'--'}
-      var pctSpan=detailRows[2].querySelector('span:last-child');
-      if(pctSpan){pctSpan.className=cls;pctSpan.textContent=isFinite(pct)?(pct>=0?'+':'')+pct.toFixed(2)+'%':'--'}
-    }
-
-    // Remove loading state
-    card.classList.remove('market-loading');
-    if(!card.classList.contains('mkt-loaded'))card.classList.add('mkt-loaded');
-  });
+  var liveTag=hasData?'<div class="market-live '+statusCls+'"><div class="market-live-dot"></div><div class="market-live-text">'+statusLabel+tsLabel+'</div></div>':'';
+  var values=MARKET_CONFIG.map(function(item){return marketInlineHTML(item, bySymbol[item.symbol])}).join('');
+  strip.innerHTML=liveTag+values;
 }
 
+var latestNewsItems=[];
 // --- News Ticker ---
 function fetchNews(){
   fetch('/api/news?_t='+Date.now()).then(function(r){return r.json()}).then(function(data){
     if(!data.ok||!data.items||!data.items.length)return;
-    var ticker=document.getElementById('newsTicker');
-    var inner=document.getElementById('newsTickerInner');
-    if(!ticker||!inner)return;
-    // Build doubled content for seamless loop
-    var html='';
-    for(var pass=0;pass<2;pass++){
-      for(var i=0;i<data.items.length;i++){
-        if(i>0||pass>0)html+='<span class="news-ticker-sep">\xb7</span>';
-        html+='<a class="news-ticker-item" href="'+data.items[i].link+'" target="_blank" rel="noopener">'+data.items[i].title+'</a>';
-      }
-    }
-    inner.innerHTML=html;
-    // Calculate animation duration based on content width
-    requestAnimationFrame(function(){
-      var totalW=inner.scrollWidth/2;
-      var duration=Math.max(totalW/40,30);// ~40px/sec, min 30s
-      inner.style.animationDuration=duration+'s';
-      ticker.classList.add('has-news');
-      document.body.classList.add('has-news-ticker');
-    });
+    latestNewsItems=data.items.slice(0,12);
   }).catch(function(){/* silent fail — news is non-critical */});
 }
 setTimeout(fetchNews,2000);// fetch news 2s after load
@@ -1477,7 +1351,7 @@ function getTDFForRK(rk,assets){
     if(!D[i][34])D[i][34]=getTDFForRK(D[i][18],D[i][4]);
   }
 })();
-var ct='dash',sc=12,sd=-1,fi={s:'',c:'',ms:0,ma:0,maMax:0,t:'',ia:'n',prov:'',minP:0,maxP:0,short:'',ind:''},fd=D.slice(),pg=0,pp=100,sel=null,notes={},leafMap=null,checked={},shortlist={},mapLayerByCity={},activeHoverCity='',activeDashSignal='',mapColorMode='score';
+var ct='today',sc=12,sd=-1,fi={s:'',c:'',ms:0,ma:0,maMax:0,t:'',ia:'n',prov:'',minP:0,maxP:0,short:'',ind:''},fd=D.slice(),pg=0,pp=100,sel=null,notes={},leafMap=null,checked={},shortlist={},mapLayerByCity={},activeHoverCity='',activeDashSignal='',mapColorMode='score';
 var pipeline={},pipelineFilter='all',pipelineSearch='',draggedPipelineEin='';
 var PIPELINE_STAGES=[{id:'new',label:'New'},{id:'qualified',label:'Qualified'},{id:'priority',label:'Priority'},{id:'contacted',label:'Contacted'},{id:'meeting',label:'Meeting'},{id:'closed',label:'Closed / Lost'}];
 var DASH_SIGNAL_META={HGR:{label:'High Growth',desc:'Expanding needs'},NSH:{label:'No Safe Harbor',desc:'Design opening'},HBL:{label:'High Balances',desc:'Fee/value review'}};
@@ -1535,8 +1409,10 @@ function setMapCityHover(city){
    if(hot){layer.bringToFront();layer.openTooltip()}else{layer.closeTooltip()}
  }
 }
-var tabIds=['dash','tbl','pipe','hm','analyze'];var tabsEl=document.getElementById('tabs');
-['OVERVIEW','PROSPECTS','PIPELINE','GEO MAP','FILING ANALYZER'].forEach(function(nm,i){var b=document.createElement('button');b.className='tab'+(i===0?' active':'');b.textContent=nm;b.dataset.tab=tabIds[i];b.addEventListener('click',function(){go(this.dataset.tab)});tabsEl.appendChild(b)});
+var tabIds=['today','pipe','tbl','alerts','news','dash','hm','templates','analyze'];var tabsEl=document.getElementById('tabs');
+['TODAY','PIPELINE','PROSPECTS','ALERTS','NEWS','OVERVIEW','GEO MAP','TEMPLATES','FILING ANALYZER'].forEach(function(nm,i){var b=document.createElement('button');b.className='tab'+(i===0?' active':'');b.textContent=nm;b.dataset.tab=tabIds[i];b.dataset.short=String(i+1);b.addEventListener('click',function(){go(this.dataset.tab)});tabsEl.appendChild(b)});
+var sideToggle=document.getElementById('sideToggle');
+if(sideToggle)sideToggle.addEventListener('click',function(){document.getElementById('sideNav').classList.toggle('collapsed')});
 
 // --- Tab Navigation ---
 function go(t){
@@ -1545,13 +1421,17 @@ document.body.classList.toggle('hm-lock',t==='hm');
 ct=t;
 document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('active',b.dataset.tab===t)});
 document.querySelectorAll('.panel').forEach(function(p,i){p.classList.toggle('active',tabIds[i]===t)});
-var titles={analyze:'Filing Analyzer',dash:'Overview',tbl:'Prospects',pipe:'Pipeline',hm:'Geo Map'};
+var titles={analyze:'Filing Analyzer',dash:'Overview',tbl:'Prospects',pipe:'Pipeline',hm:'Geo Map',today:'Today',news:'News',alerts:'Alerts',templates:'Templates'};
 document.title=(titles[t]||'Mammini')+' | Mammini 401k Prospector';
 if(t==='analyze')rAnalyze();
 if(t==='dash')rDash();
 if(t==='tbl')rTbl();
 if(t==='hm')rHM();
-if(t==='pipe')rPipe()
+if(t==='pipe')rPipe();
+if(t==='today')rToday();
+if(t==='news')rNews();
+if(t==='alerts')rAlerts();
+if(t==='templates')rTemplates()
 }
 function pn(v){var s=String(v).replace(/[$,\s]/g,'');var n=parseFloat(s)||0;var lc=String(v).toLowerCase();if(lc.indexOf('b')>=0)n*=1e9;else if(lc.indexOf('m')>=0)n*=1e6;else if(lc.indexOf('k')>=0)n*=1e3;return n}
 
@@ -2326,6 +2206,98 @@ document.querySelectorAll('.pipe-col').forEach(function(col){col.addEventListene
 document.querySelectorAll('[data-open]').forEach(function(btn){btn.addEventListener('click',function(e){e.stopPropagation();var plan=getPlanByEin(this.dataset.open);if(plan){go('tbl');oD(D.indexOf(plan),D)}})});
 document.querySelectorAll('[data-next]').forEach(function(btn){btn.addEventListener('click',function(e){e.stopPropagation();var item=pipeline[this.dataset.next];if(!item)return;var currentIndex=0;for(var i=0;i<PIPELINE_STAGES.length;i++){if(PIPELINE_STAGES[i].id===item.stage){currentIndex=i;break}}var next=PIPELINE_STAGES[Math.min(currentIndex+1,PIPELINE_STAGES.length-1)];setPipelineStage(item.ein,next.id);toast('Advanced to '+next.label,'success')})});
 document.querySelectorAll('[data-remove]').forEach(function(btn){btn.addEventListener('click',function(e){e.stopPropagation();var ein=this.dataset.remove;if(!ein)return;if(!confirm('Are you sure you want to remove this plan from the pipeline?'))return;removePipeline(ein);toast('Removed from pipeline','info');rPipe()})});
+}
+function buildTodayPriorities(limit){
+  limit=limit||6;
+  var pool=D.slice().filter(function(p){return !isInPipeline(p[14])&&p[12]>=80});
+  pool.sort(function(a,b){return (b[12]-a[12])||((b[4]||0)-(a[4]||0))});
+  return pool.slice(0,limit);
+}
+function rToday(){
+  var el=document.getElementById('p-today');
+  var touchItems=[],highRisk=[],i,item,plan;
+  for(var ein in pipeline){
+    item=pipeline[ein];
+    if(!item)continue;
+    if(item.nextTouch)touchItems.push(item);
+    plan=getPlanByEin(ein);
+    if(plan&&((plan[6]||0)<0||!plan[13]))highRisk.push({item:item,plan:plan});
+  }
+  touchItems.sort(function(a,b){return String(a.nextTouch||'').localeCompare(String(b.nextTouch||''))});
+  highRisk.sort(function(a,b){return (a.plan[6]||0)-(b.plan[6]||0)});
+  var priorities=buildTodayPriorities(7);
+  var h='';
+  h+='<div class="module-shell"><div class="module-hero"><div class="module-kicker">Daily execution</div><div class="module-title">Today</div><div class="module-sub">A recommended day plan from your current data: who to contact, where risk is building, and what to add to pipeline next.</div></div>';
+  h+='<div class="module-grid"><div class="module-card"><h4>Recommended buildout</h4><p>Turn this into a true work queue with owner assignments, SLA timers, and one-click activity logging that pushes updates back to pipeline cards.</p><ul class="module-list"><li>Auto-rank tasks by next touch date and opportunity score.</li><li>Add outcome logging (left voicemail, meeting booked, declined).</li><li>Show completion burndown for the day.</li></ul></div>';
+  h+='<div class="module-card"><h4>Quick actions</h4><div class="module-row"><strong>Open Pipeline Board</strong><button class="btn" id="todayOpenPipe" style="font-size:9px;padding:6px 10px">GO</button></div><div class="module-row"><strong>Find New Prospects</strong><button class="btn" id="todayOpenProspects" style="font-size:9px;padding:6px 10px">GO</button></div><div class="module-row"><strong>Review Alerts</strong><button class="btn" id="todayOpenAlerts" style="font-size:9px;padding:6px 10px">GO</button></div></div></div>';
+  h+='<div class="module-grid"><div class="module-card"><h4>Due / upcoming touches</h4>';
+  if(!touchItems.length)h+='<p>No next-touch dates set yet. Add dates in pipeline cards to generate an actionable agenda.</p>';
+  for(i=0;i<Math.min(touchItems.length,8);i++){item=touchItems[i];h+='<div class="module-row"><div><strong>'+H(item.name||item.sponsor||item.ein)+'</strong><span>'+(item.owner?(' · '+H(item.owner)):'')+'</span></div><span>'+H(item.nextTouch)+'</span></div>'}
+  h+='</div><div class="module-card"><h4>High priority plans to add</h4>';
+  if(!priorities.length)h+='<p>Great job — most high-fit opportunities are already in the pipeline.</p>';
+  for(i=0;i<priorities.length;i++){plan=priorities[i];h+='<div class="module-row"><div><strong>'+H(plan[0])+'</strong><span>'+H(plan[2])+' · Score '+plan[12]+'</span></div><button class="btn" data-today-add="'+H(plan[14])+'" style="font-size:9px;padding:6px 10px">ADD</button></div>'}
+  h+='</div></div>';
+  if(highRisk.length){h+='<div class="module-card"><h4>Risk watch list</h4><p>Plans already in pipeline with deteriorating growth or missing filing links.</p>';for(i=0;i<Math.min(highRisk.length,6);i++){plan=highRisk[i].plan;item=highRisk[i].item;h+='<div class="module-row"><div><strong>'+H(plan[0])+'</strong><span>'+(plan[13]?'Growth '+FM.p(plan[6]):'Missing filing link')+'</span></div><button class="btn" data-open-risk="'+H(item.ein)+'" style="font-size:9px;padding:6px 10px">OPEN</button></div>'}h+='</div>'}
+  h+='</div>';
+  el.innerHTML=h;
+  var pBtn=document.getElementById('todayOpenPipe');if(pBtn)pBtn.addEventListener('click',function(){go('pipe')});
+  var tBtn=document.getElementById('todayOpenProspects');if(tBtn)tBtn.addEventListener('click',function(){go('tbl')});
+  var aBtn=document.getElementById('todayOpenAlerts');if(aBtn)aBtn.addEventListener('click',function(){go('alerts')});
+  document.querySelectorAll('[data-today-add]').forEach(function(btn){btn.addEventListener('click',function(){var plan=getPlanByEin(this.dataset.todayAdd);if(!plan)return;ensurePipeline(plan,'new');toast('Added to pipeline','success');rToday()})});
+  document.querySelectorAll('[data-open-risk]').forEach(function(btn){btn.addEventListener('click',function(){var plan=getPlanByEin(this.dataset.openRisk);if(plan){go('tbl');oD(D.indexOf(plan),D)}})});
+}
+function rNews(){
+  var el=document.getElementById('p-news');
+  var h='';
+  h+='<div class="module-shell"><div class="module-hero"><div class="module-kicker">Market & retirement intelligence</div><div class="module-title">News</div><div class="module-sub">A dedicated tab for decision-ready news. Recommended build: source tagging, relevance scoring by your target market, and save-to-plan workflows.</div></div>';
+  h+='<div class="module-grid"><div class="module-card"><h4>Recommended buildout</h4><ul class="module-list"><li>Tag each article to themes (fees, provider moves, litigation, regulation).</li><li>Auto-detect impacted providers/industries in your pipeline.</li><li>Add a “Create angle” action that drafts outreach talking points.</li></ul></div>';
+  h+='<div class="module-card"><h4>Actions</h4><div class="module-row"><strong>Refresh news feed</strong><button class="btn" id="newsRefreshBtn" style="font-size:9px;padding:6px 10px">REFRESH</button></div><div class="module-row"><strong>Open prospect table</strong><button class="btn" id="newsOpenProspects" style="font-size:9px;padding:6px 10px">GO</button></div></div></div>';
+  h+='<div class="module-card"><h4>Latest headlines</h4>';
+  if(!latestNewsItems.length)h+='<p>No cached headlines yet. Use Refresh to load from <code>/api/news</code>.</p>';
+  for(var i=0;i<latestNewsItems.length;i++){var it=latestNewsItems[i];h+='<div class="module-row"><div style="min-width:0"><strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+H(it.title||'Untitled')+'</strong><span>'+(it.source?H(it.source):'Live feed')+'</span></div><a class="btn" href="'+H(it.link||'#')+'" target="_blank" rel="noopener" style="font-size:9px;padding:6px 10px">OPEN</a></div>'}
+  h+='</div></div>';
+  el.innerHTML=h;
+  var rb=document.getElementById('newsRefreshBtn');if(rb)rb.addEventListener('click',function(){fetchNews();setTimeout(rNews,350);toast('Refreshing news','info')});
+  var op=document.getElementById('newsOpenProspects');if(op)op.addEventListener('click',function(){go('tbl')});
+}
+function rAlerts(){
+  var el=document.getElementById('p-alerts');
+  var alerts=[],i,p;
+  for(i=0;i<D.length;i++){
+    p=D[i];
+    if((p[31]||0)>1.25)alerts.push({severity:'High',label:'Fee ratio above benchmark band',detail:p[0]+' · '+p[31]+'% expense ratio',ein:p[14]});
+    if((p[6]||0)<-20)alerts.push({severity:'High',label:'Sharp asset decline',detail:p[0]+' · '+FM.p(p[6])+' YoY growth',ein:p[14]});
+    if(!p[13])alerts.push({severity:'Medium',label:'Missing filing URL',detail:p[0]+' · needs fallback filing retrieval',ein:p[14]});
+  }
+  alerts=alerts.slice(0,40);
+  var h='';
+  h+='<div class="module-shell"><div class="module-hero"><div class="module-kicker">Signal monitor</div><div class="module-title">Alerts</div><div class="module-sub">Recommended direction: centralize proactive triggers so advisors don’t have to hunt manually for fee, growth, filing, and provider-change events.</div></div>';
+  h+='<div class="module-grid"><div class="module-card"><h4>Recommended buildout</h4><ul class="module-list"><li>Introduce alert rules by threshold with snooze/resolve workflow.</li><li>Add ownership + SLA timer per alert.</li><li>Push important alerts into Today tab automatically.</li></ul></div>';
+  h+='<div class="module-card"><h4>Current generated alerts</h4><p>Rule-based sample alerts from currently loaded plan data.</p>';
+  if(!alerts.length)h+='<p>No alerts triggered with current thresholds.</p>';
+  for(i=0;i<alerts.length;i++){var al=alerts[i],sevColor=al.severity==='High'?'var(--coral)':'var(--acc2)';h+='<div class="module-row"><div><strong>'+H(al.label)+'</strong><span>'+H(al.detail)+'</span></div><button class="btn" data-open-alert="'+H(al.ein)+'" style="font-size:9px;padding:6px 10px;border-color:'+sevColor+';color:'+sevColor+'">OPEN</button></div>'}
+  h+='</div></div></div>';
+  el.innerHTML=h;
+  document.querySelectorAll('[data-open-alert]').forEach(function(btn){btn.addEventListener('click',function(){var plan=getPlanByEin(this.dataset.openAlert);if(plan){go('tbl');oD(D.indexOf(plan),D)}})});
+}
+function rTemplates(){
+  var el=document.getElementById('p-templates');
+  var templates=[
+    {id:'intro',name:'First Outreach Email',body:'Subject: Quick benchmark idea for your retirement plan\\n\\nHi {{first_name}},\\n\\nI reviewed peer plans in {{industry}} and found several opportunities to reduce admin drag while improving participant outcomes.\\n\\nWould you be open to a 15-minute call next week to compare your current setup against local benchmarks?\\n\\nBest,\\n{{advisor_name}}'},
+    {id:'follow',name:'Post-Meeting Follow-up',body:'Subject: Next steps from today\\n\\nHi {{first_name}},\\n\\nThanks again for the conversation. Based on your priorities, I suggest we start with:\\n1) Provider/fee benchmark\\n2) Plan design quick wins\\n3) Participant engagement path\\n\\nIf helpful, I can send a one-page action plan before our next touchpoint.\\n\\nBest,\\n{{advisor_name}}'},
+    {id:'angle',name:'Opportunity Angle Summary',body:'Plan: {{plan_name}}\\nSignal: {{signal_name}}\\nEvidence: {{evidence}}\\nWhy this matters: {{impact}}\\nConversation starter: {{opening_question}}'}
+  ];
+  var h='';
+  h+='<div class="module-shell"><div class="module-hero"><div class="module-kicker">Advisor enablement</div><div class="module-title">Templates</div><div class="module-sub">Build this into a reusable playbook library: outreach, follow-ups, proposal snippets, and signal-specific talking points.</div></div>';
+  h+='<div class="module-grid"><div class="module-card"><h4>Recommended buildout</h4><ul class="module-list"><li>Template variables auto-filled from plan detail and signal evidence.</li><li>Attach templates to pipeline stage transitions.</li><li>Track template performance (reply rate, meeting conversion).</li></ul></div>';
+  h+='<div class="module-card"><h4>Template actions</h4><div class="module-row"><strong>Open Filing Analyzer</strong><button class="btn" id="tplAnalyzeBtn" style="font-size:9px;padding:6px 10px">GO</button></div><div class="module-row"><strong>Go to Pipeline</strong><button class="btn" id="tplPipeBtn" style="font-size:9px;padding:6px 10px">GO</button></div></div></div>';
+  for(var i=0;i<templates.length;i++){var tp=templates[i];h+='<div class="module-card"><h4>'+H(tp.name)+'</h4><p style="white-space:pre-wrap">'+H(tp.body)+'</p><div class="module-row"><strong>Copy template</strong><button class="btn" data-copy-template="'+H(tp.id)+'" style="font-size:9px;padding:6px 10px">COPY</button></div></div>'}
+  h+='</div>';
+  el.innerHTML=h;
+  var map={};for(var m=0;m<templates.length;m++)map[templates[m].id]=templates[m].body;
+  document.querySelectorAll('[data-copy-template]').forEach(function(btn){btn.addEventListener('click',function(){var id=this.dataset.copyTemplate;var body=map[id]||'';navigator.clipboard.writeText(body).then(function(){toast('Template copied','success')}).catch(function(){toast('Clipboard blocked in this browser','warn')})})});
+  var ab=document.getElementById('tplAnalyzeBtn');if(ab)ab.addEventListener('click',function(){go('analyze')});
+  var pb=document.getElementById('tplPipeBtn');if(pb)pb.addEventListener('click',function(){go('pipe')});
 }
 // --- Geo Map ---
 // Precise SD County city coordinates
@@ -3469,25 +3441,9 @@ function renderScanResults(ein,data){
 }
 
 function enrichFromFile(ein,file){if(!file||!file.name.toLowerCase().endsWith('.pdf')){alert('Please drop a PDF file.');return}var status=document.getElementById('enrichStatus');status.style.display='block';status.textContent='Analyzing filing...';var drop=document.getElementById('enrichDrop');drop.style.borderColor='var(--acc)';drop.style.opacity='.6';var reader=new FileReader();reader.onload=function(e){var b64=btoa(new Uint8Array(e.target.result).reduce(function(d,b){return d+String.fromCharCode(b)},''));status.textContent='Processing with AI...';fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'extract_5500',base64:b64,fileName:file.name})}).then(function(resp){return resp.text().then(function(text){var data;try{data=JSON.parse(text)}catch(e){throw new Error('Server returned invalid response — try a smaller PDF.')}return {ok:resp.ok,status:resp.status,data:data}})}).then(function(res){if(!res.ok||!res.data||!res.data.ok)throw new Error((res.data&&res.data.error)||('Analysis failed ('+res.status+')'));enrichCache[ein]=res.data.parsed;saveEnrichCache();status.textContent='Analysis complete!';for(var i=0;i<D.length;i++){if(D[i][14].replace(/-/g,'')===ein){setTimeout(function(){oD(i,D)},300);break}}}).catch(function(err){status.textContent='Error: '+err.message;drop.style.opacity='1'})};reader.readAsArrayBuffer(file)}
-document.getElementById('logoHome').addEventListener('click',function(){go('dash')});
+document.getElementById('logoHome').addEventListener('click',function(){go('today')});
 document.getElementById('hdrShortlistStat').addEventListener('click',function(){fi.short='y';go('tbl')});
 document.getElementById('hdrPipelineStat').addEventListener('click',function(){go('pipe')});
-// Market card click delegation (runs once)
-document.addEventListener('click',function(e){
-  var card=e.target.closest('.market-card');
-  var strip=document.getElementById('marketStrip');
-  if(!strip)return;
-  if(card&&strip.contains(card)){
-    e.stopPropagation();
-    var detail=card.querySelector('.market-detail');
-    if(!detail)return;
-    var wasOpen=detail.classList.contains('mkt-detail-open');
-    strip.querySelectorAll('.market-detail').forEach(function(d){d.classList.remove('mkt-detail-open')});
-    if(!wasOpen)detail.classList.add('mkt-detail-open');
-  }else{
-    strip.querySelectorAll('.market-detail').forEach(function(d){d.classList.remove('mkt-detail-open')});
-  }
-});
 
 // Market auto-refresh: 15s when open, 5min when closed
 var mktRefreshTimer=null;
@@ -3572,7 +3528,7 @@ function openSettings(){
 
   h+='<div style="display:flex;gap:8px;margin:16px 0"><button class="btn btn-grn" id="scoreApply" style="flex:1;padding:10px;font-size:12px">APPLY & RESCORE ALL PLANS</button><button class="btn" id="scoreReset" style="padding:10px;font-size:11px">RESET DEFAULTS</button></div>';
 
-  h+='<div class="settings-section" style="margin-bottom:0"><div class="settings-section-title">Keyboard Shortcuts</div><div style="display:grid;grid-template-columns:auto 1fr auto 1fr;gap:5px 12px;font-size:11px;color:var(--tx2)"><span class="kbd" style="background:var(--bg4);border:1px solid var(--brd);color:var(--tx2)">Esc</span><span>Close panels</span><span class="kbd" style="background:var(--bg4);border:1px solid var(--brd);color:var(--tx2)">D</span><span>Dark mode</span><span class="kbd" style="background:var(--bg4);border:1px solid var(--brd);color:var(--tx2)">/</span><span>Focus search</span><span class="kbd" style="background:var(--bg4);border:1px solid var(--brd);color:var(--tx2)">1-5</span><span>Switch tabs</span></div></div>';
+  h+='<div class="settings-section" style="margin-bottom:0"><div class="settings-section-title">Keyboard Shortcuts</div><div style="display:grid;grid-template-columns:auto 1fr auto 1fr;gap:5px 12px;font-size:11px;color:var(--tx2)"><span class="kbd" style="background:var(--bg4);border:1px solid var(--brd);color:var(--tx2)">Esc</span><span>Close panels</span><span class="kbd" style="background:var(--bg4);border:1px solid var(--brd);color:var(--tx2)">D</span><span>Dark mode</span><span class="kbd" style="background:var(--bg4);border:1px solid var(--brd);color:var(--tx2)">/</span><span>Focus search</span><span class="kbd" style="background:var(--bg4);border:1px solid var(--brd);color:var(--tx2)">1-9</span><span>Switch tabs</span></div></div>';
   h+='<div style="padding-top:10px;border-top:1px solid var(--brd);font-size:9px;color:var(--tx3);text-align:center;margin-top:12px">Mammini 401(k) Prospector \xb7 San Diego County \xb7 FY 2024/25</div></div>';
 
   ov.innerHTML=h;
@@ -3627,8 +3583,6 @@ document.addEventListener('keydown',function(e){
     if(welOv&&welOv.parentNode){welOv.parentNode.removeChild(welOv);e.preventDefault();return}
     var provOv=document.querySelector('[style*="z-index:4000"]');
     if(provOv&&provOv.parentNode===document.body){document.body.removeChild(provOv);e.preventDefault();return}
-    var strip=document.getElementById('marketStrip');
-    if(strip)strip.querySelectorAll('.market-detail').forEach(function(d){d.classList.remove('mkt-detail-open')});
     return;
   }
 
@@ -3650,8 +3604,8 @@ document.addEventListener('keydown',function(e){
     return;
   }
 
-  if(e.key>='1'&&e.key<='5'&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
-    var tabs=['dash','tbl','pipe','hm','analyze'];
+  if(e.key>='1'&&e.key<='9'&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
+    var tabs=['today','pipe','tbl','alerts','news','dash','hm','templates','analyze'];
     go(tabs[parseInt(e.key)-1]);
     e.preventDefault();
     return;
