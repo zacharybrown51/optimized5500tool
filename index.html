@@ -1443,8 +1443,8 @@ function setMapCityHover(city){
    if(hot){layer.bringToFront();layer.openTooltip()}else{layer.closeTooltip()}
  }
 }
-var tabIds=['today','pipe','tbl','alerts','news','dash','hm','templates','analyze'];var tabsEl=document.getElementById('tabs');
-['TODAY','PIPELINE','PROSPECTS','ALERTS','NEWS','OVERVIEW','GEO MAP','TEMPLATES','FILING ANALYZER'].forEach(function(nm,i){var b=document.createElement('button');b.className='tab'+(i===0?' active':'');b.textContent=nm;b.dataset.tab=tabIds[i];b.dataset.short=String(i+1);b.addEventListener('click',function(){go(this.dataset.tab)});tabsEl.appendChild(b)});
+var tabIds=['today','tbl','pipe','alerts','news','dash','hm','templates','analyze'];var tabsEl=document.getElementById('tabs');
+['TODAY','PROSPECTS','PIPELINE','ALERTS','NEWS','OVERVIEW','GEO MAP','TEMPLATES','FILING ANALYZER'].forEach(function(nm,i){var b=document.createElement('button');b.className='tab'+(i===0?' active':'');b.textContent=nm;b.dataset.tab=tabIds[i];b.dataset.short=String(i+1);b.addEventListener('click',function(){go(this.dataset.tab)});tabsEl.appendChild(b)});
 var sideToggle=document.getElementById('sideToggle');
 if(tabsEl)tabsEl.querySelectorAll('.tab').forEach(function(btn){if(btn.dataset.tab)btn.title='Open '+btn.textContent});
 if(UI_PREFS.sidebarCollapsed){var sideNav=document.getElementById('sideNav');if(sideNav)sideNav.classList.add('collapsed')}
@@ -2250,71 +2250,200 @@ document.querySelectorAll('[data-open]').forEach(function(btn){btn.addEventListe
 document.querySelectorAll('[data-next]').forEach(function(btn){btn.addEventListener('click',function(e){e.stopPropagation();var item=pipeline[this.dataset.next];if(!item)return;var currentIndex=0;for(var i=0;i<PIPELINE_STAGES.length;i++){if(PIPELINE_STAGES[i].id===item.stage){currentIndex=i;break}}var next=PIPELINE_STAGES[Math.min(currentIndex+1,PIPELINE_STAGES.length-1)];setPipelineStage(item.ein,next.id);toast('Advanced to '+next.label,'success')})});
 document.querySelectorAll('[data-remove]').forEach(function(btn){btn.addEventListener('click',function(e){e.stopPropagation();var ein=this.dataset.remove;if(!ein)return;if(!confirm('Are you sure you want to remove this plan from the pipeline?'))return;removePipeline(ein);toast('Removed from pipeline','info');rPipe()})});
 }
+function parseISODateLoose(v){
+  if(!v)return null;
+  var d=new Date(v);
+  if(!isNaN(d.getTime()))return d;
+  var m=String(v).match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if(!m)return null;
+  return new Date(parseInt(m[1],10),parseInt(m[2],10)-1,parseInt(m[3],10));
+}
+function dueBucketForDate(v){
+  var d=parseISODateLoose(v);
+  if(!d)return {bucket:'unscheduled',label:'No date set',days:null};
+  var now=new Date();
+  var today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  var target=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+  var days=Math.round((target-today)/86400000);
+  if(days<0)return {bucket:'overdue',label:Math.abs(days)+'d overdue',days:days};
+  if(days===0)return {bucket:'today',label:'Due today',days:days};
+  if(days<=2)return {bucket:'next48',label:'Due in '+days+'d',days:days};
+  return {bucket:'later',label:'Due in '+days+'d',days:days};
+}
 function buildTodayPriorities(limit){
-  limit=limit||6;
-  var pool=D.slice().filter(function(p){return !isInPipeline(p[14])&&p[12]>=80});
-  pool.sort(function(a,b){return (b[12]-a[12])||((b[4]||0)-(a[4]||0))});
+  limit=limit||8;
+  var pool=[];
+  for(var i=0;i<D.length;i++){
+    var p=D[i];
+    if(isInPipeline(p[14]))continue;
+    var score=p[12]||0;
+    if(score<76)continue;
+    var urgency=0;
+    if((p[31]||0)>1.2)urgency+=7;
+    if((p[6]||0)<0)urgency+=6;
+    if(!p[20])urgency+=4;
+    if((p[7]||0)>=25&&(p[7]||0)<=300)urgency+=3;
+    pool.push({plan:p,priorityScore:score+urgency,urgency:urgency});
+  }
+  pool.sort(function(a,b){return (b.priorityScore-a.priorityScore)||((b.plan[4]||0)-(a.plan[4]||0));});
   return pool.slice(0,limit);
 }
 function rToday(){
   var el=document.getElementById('p-today');
-  var touchItems=[],highRisk=[],i,item,plan;
+  var queue=[],unscheduled=[],watch=[],owners={},todayStats={overdue:0,today:0,next48:0,total:0};
   for(var ein in pipeline){
-    item=pipeline[ein];
+    var item=pipeline[ein];
     if(!item)continue;
-    if(item.nextTouch)touchItems.push(item);
-    plan=getPlanByEin(ein);
-    if(plan&&((plan[6]||0)<0||!plan[13]))highRisk.push({item:item,plan:plan});
+    var plan=getPlanByEin(ein);
+    var bucket=dueBucketForDate(item.nextTouch);
+    var rec={item:item,plan:plan,bucket:bucket};
+    if(item.owner)owners[item.owner]=(owners[item.owner]||0)+1;
+    if(item.nextTouch){
+      queue.push(rec);
+      todayStats.total++;
+      if(bucket.bucket==='overdue')todayStats.overdue++;
+      else if(bucket.bucket==='today')todayStats.today++;
+      else if(bucket.bucket==='next48')todayStats.next48++;
+    }else unscheduled.push(rec);
+    var riskScore=0;
+    if(plan){
+      if((plan[6]||0)<-10)riskScore+=2;
+      if(!plan[13])riskScore+=1;
+      if((plan[31]||0)>1.35)riskScore+=1;
+      if(riskScore>0)watch.push({plan:plan,item:item,riskScore:riskScore});
+    }
   }
-  touchItems.sort(function(a,b){return String(a.nextTouch||'').localeCompare(String(b.nextTouch||''))});
-  highRisk.sort(function(a,b){return (a.plan[6]||0)-(b.plan[6]||0)});
-  var priorities=buildTodayPriorities(7);
+  queue.sort(function(a,b){
+    if(a.bucket.days===null&&b.bucket.days===null)return 0;
+    if(a.bucket.days===null)return 1;
+    if(b.bucket.days===null)return -1;
+    return a.bucket.days-b.bucket.days;
+  });
+  unscheduled.sort(function(a,b){return (b.item.score||0)-(a.item.score||0);});
+  watch.sort(function(a,b){return b.riskScore-a.riskScore||((a.plan[6]||0)-(b.plan[6]||0));});
+  var priorities=buildTodayPriorities(8);
+  var ownerRows=Object.keys(owners).sort(function(a,b){return owners[b]-owners[a];});
   var h='';
-  h+='<div class="module-shell"><div class="module-hero"><div class="module-kicker">Daily execution</div><div class="module-title">Today, '+H(UI_PREFS.advisorName)+'</div><div class="module-sub">Focused on '+H(UI_PREFS.idealSegment)+'. Here is your recommended day plan: who to contact, where risk is building, and what to add to pipeline next.</div></div>';
-  h+='<div class="module-grid"><div class="module-card"><h4>Recommended buildout</h4><p>Turn this into a true work queue with owner assignments, SLA timers, and one-click activity logging that pushes updates back to pipeline cards.</p><ul class="module-list"><li>Auto-rank tasks by next touch date and opportunity score.</li><li>Add outcome logging (left voicemail, meeting booked, declined).</li><li>Show completion burndown for the day.</li></ul></div>';
-  h+='<div class="module-card"><h4>Quick actions</h4><div class="module-row"><strong>Open Pipeline Board</strong><button class="btn" id="todayOpenPipe" style="font-size:9px;padding:6px 10px">GO</button></div><div class="module-row"><strong>Find New Prospects</strong><button class="btn" id="todayOpenProspects" style="font-size:9px;padding:6px 10px">GO</button></div><div class="module-row"><strong>Review Alerts</strong><button class="btn" id="todayOpenAlerts" style="font-size:9px;padding:6px 10px">GO</button></div></div></div>';
-  h+='<div class="module-grid"><div class="module-card"><h4>Due / upcoming touches</h4>';
-  if(!touchItems.length)h+='<p>No next-touch dates set yet. Add dates in pipeline cards to generate an actionable agenda.</p>';
-  for(i=0;i<Math.min(touchItems.length,8);i++){item=touchItems[i];h+='<div class="module-row"><div><strong>'+H(item.name||item.sponsor||item.ein)+'</strong><span>'+(item.owner?(' · '+H(item.owner)):'')+'</span></div><span>'+H(item.nextTouch)+'</span></div>'}
-  h+='</div><div class="module-card"><h4>High priority plans to add</h4>';
-  if(!priorities.length)h+='<p>Great job — most high-fit opportunities are already in the pipeline.</p>';
-  for(i=0;i<priorities.length;i++){plan=priorities[i];h+='<div class="module-row"><div><strong>'+H(plan[0])+'</strong><span>'+H(plan[2])+' · Score '+plan[12]+'</span></div><button class="btn" data-today-add="'+H(plan[14])+'" style="font-size:9px;padding:6px 10px">ADD</button></div>'}
+  h+='<div class="module-shell"><div class="module-hero"><div class="module-kicker">Daily execution</div><div class="module-title">Today, '+H(UI_PREFS.advisorName)+'</div><div class="module-sub">Execution queue for '+H(UI_PREFS.idealSegment)+'. Focus on overdue follow-up, high-intent opportunities, and at-risk pipeline records.</div></div>';
+  h+='<div class="module-grid"><div class="module-card"><h4>Work queue health</h4><div class="module-list"><li><b>'+FM.n(todayStats.overdue)+'</b> overdue follow-ups</li><li><b>'+FM.n(todayStats.today)+'</b> due today</li><li><b>'+FM.n(todayStats.next48)+'</b> due in next 48h</li><li><b>'+FM.n(unscheduled.length)+'</b> records missing next-touch date</li></div><div style="margin-top:10px;display:flex;gap:6px"><button class="btn" id="todayOpenPipe" style="font-size:9px;padding:6px 10px">OPEN PIPELINE</button><button class="btn" id="todayOpenAlerts" style="font-size:9px;padding:6px 10px">OPEN ALERTS</button></div></div>';
+  h+='<div class="module-card"><h4>Owner coverage</h4>';
+  if(!ownerRows.length){h+='<p>No owners set yet. Add owner names in pipeline detail to balance advisor workload.</p>'}
+  else{for(var or=0;or<Math.min(ownerRows.length,6);or++){var owner=ownerRows[or];h+='<div class="module-row"><div><strong>'+H(owner)+'</strong><span>Assigned opportunities</span></div><span>'+FM.n(owners[owner])+'</span></div>'}}
   h+='</div></div>';
-  if(highRisk.length){h+='<div class="module-card"><h4>Risk watch list</h4><p>Plans already in pipeline with deteriorating growth or missing filing links.</p>';for(i=0;i<Math.min(highRisk.length,6);i++){plan=highRisk[i].plan;item=highRisk[i].item;h+='<div class="module-row"><div><strong>'+H(plan[0])+'</strong><span>'+(plan[13]?'Growth '+FM.p(plan[6]):'Missing filing link')+'</span></div><button class="btn" data-open-risk="'+H(item.ein)+'" style="font-size:9px;padding:6px 10px">OPEN</button></div>'}h+='</div>'}
-  h+='</div>';
+
+  h+='<div class="module-grid"><div class="module-card"><h4>Priority touches</h4>';
+  if(!queue.length)h+='<p>No next-touch dates set. Add dates in Pipeline to generate an actionable daily list.</p>';
+  for(var i=0;i<Math.min(queue.length,10);i++){
+    var q=queue[i],qn=q.item.name||q.item.sponsor||q.item.ein;
+    h+='<div class="module-row"><div><strong>'+H(qn)+'</strong><span>'+H(q.item.owner||'Unassigned')+' · '+H(q.bucket.label)+'</span></div><button class="btn" data-open-risk="'+H(q.item.ein)+'" style="font-size:9px;padding:6px 10px">OPEN</button></div>';
+  }
+  h+='</div><div class="module-card"><h4>High-intent prospects not in pipeline</h4>';
+  if(!priorities.length)h+='<p>All high-intent candidates are already being tracked.</p>';
+  for(var j=0;j<priorities.length;j++){
+    var pr=priorities[j],pp=pr.plan;
+    h+='<div class="module-row"><div><strong>'+H(pp[0])+'</strong><span>'+H(pp[2])+' · Score '+pp[12]+' · Urgency '+pr.urgency+'</span></div><button class="btn" data-today-add="'+H(pp[14])+'" style="font-size:9px;padding:6px 10px">ADD</button></div>';
+  }
+  h+='</div></div>';
+
+  h+='<div class="module-grid"><div class="module-card"><h4>Risk watch list</h4>';
+  if(!watch.length)h+='<p>No elevated risk flags in current pipeline.</p>';
+  for(var w=0;w<Math.min(watch.length,8);w++){
+    var wr=watch[w],risk=[];
+    if((wr.plan[6]||0)<-10)risk.push('Growth '+FM.p(wr.plan[6]));
+    if(!wr.plan[13])risk.push('No filing URL');
+    if((wr.plan[31]||0)>1.35)risk.push('Expense ratio '+wr.plan[31]+'%');
+    h+='<div class="module-row"><div><strong>'+H(wr.plan[0])+'</strong><span>'+H(risk.join(' · '))+'</span></div><button class="btn" data-open-risk="'+H(wr.item.ein)+'" style="font-size:9px;padding:6px 10px">OPEN</button></div>';
+  }
+  h+='</div><div class="module-card"><h4>Missing scheduling data</h4>';
+  if(!unscheduled.length)h+='<p>All pipeline records have a next-touch date.</p>';
+  for(var u=0;u<Math.min(unscheduled.length,8);u++){
+    var us=unscheduled[u];
+    h+='<div class="module-row"><div><strong>'+H(us.item.name||us.item.sponsor||us.item.ein)+'</strong><span>'+H(us.item.owner||'Unassigned')+' · stage '+H(stageLabel(us.item.stage||'new'))+'</span></div><button class="btn" data-open-risk="'+H(us.item.ein)+'" style="font-size:9px;padding:6px 10px">PLAN</button></div>';
+  }
+  h+='</div></div></div>';
+
   el.innerHTML=h;
   var pBtn=document.getElementById('todayOpenPipe');if(pBtn)pBtn.addEventListener('click',function(){go('pipe')});
-  var tBtn=document.getElementById('todayOpenProspects');if(tBtn)tBtn.addEventListener('click',function(){go('tbl')});
   var aBtn=document.getElementById('todayOpenAlerts');if(aBtn)aBtn.addEventListener('click',function(){go('alerts')});
   document.querySelectorAll('[data-today-add]').forEach(function(btn){btn.addEventListener('click',function(){var plan=getPlanByEin(this.dataset.todayAdd);if(!plan)return;ensurePipeline(plan,'new');toast('Added to pipeline','success');rToday()})});
   document.querySelectorAll('[data-open-risk]').forEach(function(btn){btn.addEventListener('click',function(){var plan=getPlanByEin(this.dataset.openRisk);if(plan){go('tbl');oD(D.indexOf(plan),D)}})});
 }
 function rNews(){
   var el=document.getElementById('p-news');
+  var stories=(latestNewsItems||[]).slice(0,12);
+  var categories={Regulatory:[],Providers:[],Markets:[],Practice:[]};
+  function classify(item){
+    var txt=((item.title||'')+' '+(item.summary||'')+' '+(item.source||'')).toLowerCase();
+    if(/sec|dol|irs|rule|fiduciary|litigation|lawsuit/.test(txt))return 'Regulatory';
+    if(/fidelity|empower|principal|vanguard|recordkeeper|advisor|fee/.test(txt))return 'Providers';
+    if(/inflation|rate|fed|equity|bond|market/.test(txt))return 'Markets';
+    return 'Practice';
+  }
+  for(var i=0;i<stories.length;i++){categories[classify(stories[i])].push(stories[i]);}
+  var lead=stories.length?stories[0]:null;
   var h='';
-  h+='<div class="module-shell"><div class="module-hero"><div class="module-kicker">Market & retirement intelligence</div><div class="module-title">News</div><div class="module-sub">Personalized for '+H(UI_PREFS.homeRegion)+' and your focus on '+H(UI_PREFS.idealSegment)+'. Recommended build: source tagging, relevance scoring, and save-to-plan workflows.</div></div>';
-  h+='<div class="module-grid"><div class="module-card"><h4>Recommended buildout</h4><ul class="module-list"><li>Tag each article to themes (fees, provider moves, litigation, regulation).</li><li>Auto-detect impacted providers/industries in your pipeline.</li><li>Add a “Create angle” action that drafts outreach talking points.</li></ul></div>';
-  h+='<div class="module-card"><h4>Actions</h4><div class="module-row"><strong>Refresh news feed</strong><button class="btn" id="newsRefreshBtn" style="font-size:9px;padding:6px 10px">REFRESH</button></div><div class="module-row"><strong>Open prospect table</strong><button class="btn" id="newsOpenProspects" style="font-size:9px;padding:6px 10px">GO</button></div></div></div>';
-  h+='<div class="module-card"><h4>Latest headlines</h4>';
-  if(!latestNewsItems.length)h+='<p>No cached headlines yet. Use Refresh to load from <code>/api/news</code>.</p>';
-  for(var i=0;i<latestNewsItems.length;i++){var it=latestNewsItems[i];h+='<div class="module-row"><div style="min-width:0"><strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+H(it.title||'Untitled')+'</strong><span>'+(it.source?H(it.source):'Live feed')+'</span></div><a class="btn" href="'+H(it.link||'#')+'" target="_blank" rel="noopener" style="font-size:9px;padding:6px 10px">OPEN</a></div>'}
+  h+='<div class="module-shell"><div class="module-hero"><div class="module-kicker">Market & retirement intelligence</div><div class="module-title">Newsroom</div><div class="module-sub">Curated for '+H(UI_PREFS.homeRegion)+' advisors. Each story is grouped by relevance so you can turn headlines into client outreach angles quickly.</div></div>';
+  h+='<div class="module-grid"><div class="module-card"><h4>Feed controls</h4><div class="module-row"><strong>Refresh latest feed</strong><button class="btn" id="newsRefreshBtn" style="font-size:9px;padding:6px 10px">REFRESH</button></div><div class="module-row"><strong>Open prospects table</strong><button class="btn" id="newsOpenProspects" style="font-size:9px;padding:6px 10px">GO</button></div><p style="margin-top:8px">Loaded '+FM.n(stories.length)+' stories from <code>/api/news</code>.</p></div>';
+  h+='<div class="module-card"><h4>Category mix</h4>';
+  var catNames=['Regulatory','Providers','Markets','Practice'];
+  for(var c=0;c<catNames.length;c++){var nm=catNames[c];h+='<div class="module-row"><div><strong>'+nm+'</strong><span>Stories in this stream</span></div><span>'+FM.n(categories[nm].length)+'</span></div>'}
+  h+='</div></div>';
+
+  h+='<div class="module-grid"><div class="module-card"><h4>Top story</h4>';
+  if(!lead)h+='<p>No cached headlines yet. Click refresh to load live items.</p>';
+  else{
+    h+='<p style="margin-bottom:8px"><strong>'+H(lead.title||'Untitled')+'</strong></p>';
+    h+='<p>'+(lead.source?H(lead.source)+' · ':'')+(lead.publishedAt?H(String(lead.publishedAt).slice(0,10)):'recent')+'</p>';
+    h+='<p style="margin-top:8px">Why this matters: prepare a 2–3 sentence update for plan sponsors that ties this development to fees, participant outcomes, or governance oversight.</p>';
+    h+='<div style="margin-top:10px"><a class="btn" href="'+H(lead.link||'#')+'" target="_blank" rel="noopener" style="font-size:9px;padding:6px 10px">OPEN STORY</a></div>';
+  }
+  h+='</div><div class="module-card"><h4>Advisor relevance queue</h4>';
+  for(var s=0;s<Math.min(stories.length,8);s++){
+    var it=stories[s],cat=classify(it);
+    h+='<div class="module-row"><div style="min-width:0"><strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+H(it.title||'Untitled')+'</strong><span>'+cat+' · '+H(it.source||'Live feed')+'</span></div><a class="btn" href="'+H(it.link||'#')+'" target="_blank" rel="noopener" style="font-size:9px;padding:6px 10px">OPEN</a></div>';
+  }
+  if(!stories.length)h+='<p>No stories available.</p>';
+  h+='</div></div>';
+
+  h+='<div class="module-grid">';
+  for(var ci=0;ci<catNames.length;ci++){
+    var cn=catNames[ci],list=categories[cn];
+    h+='<div class="module-card"><h4>'+cn+'</h4>';
+    if(!list.length)h+='<p>No stories in this category yet.</p>';
+    for(var li=0;li<Math.min(list.length,4);li++){
+      var st=list[li];
+      h+='<div class="module-row"><div style="min-width:0"><strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+H(st.title||'Untitled')+'</strong><span>'+H(st.source||'Live feed')+'</span></div><a class="btn" href="'+H(st.link||'#')+'" target="_blank" rel="noopener" style="font-size:9px;padding:6px 10px">OPEN</a></div>';
+    }
+    h+='</div>';
+  }
   h+='</div></div>';
   el.innerHTML=h;
   var rb=document.getElementById('newsRefreshBtn');if(rb)rb.addEventListener('click',function(){fetchNews();setTimeout(rNews,350);toast('Refreshing news','info')});
   var op=document.getElementById('newsOpenProspects');if(op)op.addEventListener('click',function(){go('tbl')});
 }
+function buildAlerts(){
+  var alerts=[];
+  for(var i=0;i<D.length;i++){
+    var p=D[i],sev='Medium';
+    if((p[31]||0)>1.35){sev=(p[31]>1.8?'High':'Medium');alerts.push({severity:sev,type:'Fee displacement',label:'Fee ratio above peer band',detail:p[0]+' · '+p[31]+'% expense ratio',ein:p[14]});}
+    if((p[6]||0)<-20){alerts.push({severity:'High',type:'Growth deterioration',label:'Sharp asset decline',detail:p[0]+' · '+FM.p(p[6])+' YoY growth',ein:p[14]});}
+    if(!p[13]){alerts.push({severity:'Medium',type:'Data quality',label:'Missing filing URL',detail:p[0]+' · needs filing retrieval',ein:p[14]});}
+    if(!p[20]&&(p[12]||0)>=85){alerts.push({severity:'High',type:'No-advisor opportunity',label:'High-score plan without advisor',detail:p[0]+' · score '+p[12],ein:p[14]});}
+  }
+  return alerts.slice(0,80);
+}
 function rAlerts(){
   var el=document.getElementById('p-alerts');
-  var alerts=[],i,p;
-  for(i=0;i<D.length;i++){
-    p=D[i];
-    if((p[31]||0)>1.25)alerts.push({severity:'High',label:'Fee ratio above benchmark band',detail:p[0]+' · '+p[31]+'% expense ratio',ein:p[14]});
-    if((p[6]||0)<-20)alerts.push({severity:'High',label:'Sharp asset decline',detail:p[0]+' · '+FM.p(p[6])+' YoY growth',ein:p[14]});
-    if(!p[13])alerts.push({severity:'Medium',label:'Missing filing URL',detail:p[0]+' · needs fallback filing retrieval',ein:p[14]});
-  }
-  alerts=alerts.slice(0,40);
+  var alerts=buildAlerts();
   var counts={new:0,snoozed:0,resolved:0};
-  for(i=0;i<alerts.length;i++){var st=getAlertStatus(alerts[i]);if(counts[st]!=null)counts[st]++}
+  var sevCounts={High:0,Medium:0,Low:0};
+  var typeCounts={};
+  for(var i=0;i<alerts.length;i++){
+    var st=getAlertStatus(alerts[i]);
+    if(counts[st]!=null)counts[st]++;
+    sevCounts[alerts[i].severity]=(sevCounts[alerts[i].severity]||0)+1;
+    typeCounts[alerts[i].type]=(typeCounts[alerts[i].type]||0)+1;
+  }
   var shown=alerts.filter(function(a){
     var st=getAlertStatus(a);
     if(alertsFilter==='all')return true;
@@ -2322,14 +2451,19 @@ function rAlerts(){
     return st===alertsFilter;
   });
   var h='';
-  h+='<div class="module-shell"><div class="module-hero"><div class="module-kicker">Signal monitor</div><div class="module-title">Alerts</div><div class="module-sub">Track issues in a triage workflow built for '+H(UI_PREFS.advisorName)+': prioritize, snooze, resolve, and return to high-value opportunities faster.</div></div>';
-  h+='<div class="module-grid"><div class="module-card"><h4>Recommended buildout</h4><ul class="module-list"><li>Introduce alert rules by threshold with snooze/resolve workflow.</li><li>Add ownership + SLA timer per alert.</li><li>Push important alerts into Today tab automatically.</li></ul></div>';
-  h+='<div class="module-card"><h4>Current generated alerts</h4><p>Rule-based alerts with advisor triage state.</p>';
-  h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 10px"><button class="pipe-pill'+(alertsFilter==='open'?' active':'')+'" data-af=\"open\">Open <span class=\"ct\">'+(counts.new+counts.snoozed)+'</span></button><button class="pipe-pill'+(alertsFilter==='new'?' active':'')+'" data-af=\"new\">New <span class=\"ct\">'+counts.new+'</span></button><button class="pipe-pill'+(alertsFilter==='snoozed'?' active':'')+'" data-af=\"snoozed\">Snoozed <span class=\"ct\">'+counts.snoozed+'</span></button><button class="pipe-pill'+(alertsFilter==='resolved'?' active':'')+'" data-af=\"resolved\">Resolved <span class=\"ct\">'+counts.resolved+'</span></button><button class="pipe-pill'+(alertsFilter==='all'?' active':'')+'" data-af=\"all\">All <span class=\"ct\">'+alerts.length+'</span></button></div>';
+  h+='<div class="module-shell"><div class="module-hero"><div class="module-kicker">Signal monitor</div><div class="module-title">Alerts triage</div><div class="module-sub">Triage queue for fee displacement, growth deterioration, filing reliability, and no-advisor opportunities. Resolve fast and route important work into Today.</div></div>';
+  h+='<div class="module-grid"><div class="module-card"><h4>Triage filters</h4><div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 10px"><button class="pipe-pill'+(alertsFilter==='open'?' active':'')+'" data-af="open">Open <span class="ct">'+(counts.new+counts.snoozed)+'</span></button><button class="pipe-pill'+(alertsFilter==='new'?' active':'')+'" data-af="new">New <span class="ct">'+counts.new+'</span></button><button class="pipe-pill'+(alertsFilter==='snoozed'?' active':'')+'" data-af="snoozed">Snoozed <span class="ct">'+counts.snoozed+'</span></button><button class="pipe-pill'+(alertsFilter==='resolved'?' active':'')+'" data-af="resolved">Resolved <span class="ct">'+counts.resolved+'</span></button><button class="pipe-pill'+(alertsFilter==='all'?' active':'')+'" data-af="all">All <span class="ct">'+alerts.length+'</span></button></div><p>Use snooze for non-urgent alerts and resolve once outreach or remediation is complete.</p></div>';
+  h+='<div class="module-card"><h4>Severity mix</h4><div class="module-row"><div><strong>High</strong><span>Immediate advisor review</span></div><span>'+FM.n(sevCounts.High||0)+'</span></div><div class="module-row"><div><strong>Medium</strong><span>Review this week</span></div><span>'+FM.n(sevCounts.Medium||0)+'</span></div><div class="module-row"><div><strong>Low</strong><span>Monitor trend</span></div><span>'+FM.n(sevCounts.Low||0)+'</span></div></div></div>';
+
+  h+='<div class="module-grid"><div class="module-card"><h4>Alert taxonomy</h4>';
+  var types=Object.keys(typeCounts).sort(function(a,b){return typeCounts[b]-typeCounts[a]});
+  if(!types.length)h+='<p>No generated alerts.</p>';
+  for(var t=0;t<types.length;t++){var tp=types[t];h+='<div class="module-row"><div><strong>'+H(tp)+'</strong><span>Rule-generated</span></div><span>'+FM.n(typeCounts[tp])+'</span></div>'}
+  h+='</div><div class="module-card"><h4>Active triage queue</h4>';
   if(!shown.length)h+='<p>No alerts in this state right now.</p>';
-  for(i=0;i<shown.length;i++){
-    var al=shown[i],sevColor=al.severity==='High'?'var(--coral)':'var(--acc2)',status=getAlertStatus(al),statusColor=status==='resolved'?'var(--teal)':status==='snoozed'?'var(--tx3)':'var(--coral)';
-    h+='<div class="module-row"><div><strong>'+H(al.label)+'</strong><span>'+H(al.detail)+' · <b style="color:'+statusColor+'">'+status.toUpperCase()+'</b></span></div><div style="display:flex;gap:4px;flex-wrap:wrap"><button class="btn" data-open-alert="'+H(al.ein)+'" style="font-size:9px;padding:6px 10px;border-color:'+sevColor+';color:'+sevColor+'">OPEN</button><button class="btn" data-alert-state="snoozed" data-alert-ein="'+H(al.ein)+'" data-alert-label="'+H(al.label)+'" data-alert-sev="'+H(al.severity)+'" style="font-size:9px;padding:6px 10px">SNOOZE</button><button class="btn" data-alert-state="resolved" data-alert-ein="'+H(al.ein)+'" data-alert-label="'+H(al.label)+'" data-alert-sev="'+H(al.severity)+'" style="font-size:9px;padding:6px 10px">RESOLVE</button><button class="btn" data-alert-state="new" data-alert-ein="'+H(al.ein)+'" data-alert-label="'+H(al.label)+'" data-alert-sev="'+H(al.severity)+'" style="font-size:9px;padding:6px 10px">RESET</button></div></div>';
+  for(var si=0;si<Math.min(shown.length,30);si++){
+    var al=shown[si],status=getAlertStatus(al),statusColor=status==='resolved'?'var(--teal)':status==='snoozed'?'var(--tx3)':'var(--coral)',sevColor=al.severity==='High'?'var(--coral)':(al.severity==='Medium'?'var(--amb2)':'var(--acc2)');
+    h+='<div class="module-row"><div><strong>'+H(al.label)+'</strong><span>'+H(al.type)+' · '+H(al.detail)+' · <b style="color:'+statusColor+'">'+status.toUpperCase()+'</b></span></div><div style="display:flex;gap:4px;flex-wrap:wrap"><button class="btn" data-open-alert="'+H(al.ein)+'" style="font-size:9px;padding:6px 10px;border-color:'+sevColor+';color:'+sevColor+'">OPEN</button><button class="btn" data-alert-state="snoozed" data-alert-ein="'+H(al.ein)+'" data-alert-label="'+H(al.label)+'" data-alert-sev="'+H(al.severity)+'" style="font-size:9px;padding:6px 10px">SNOOZE</button><button class="btn" data-alert-state="resolved" data-alert-ein="'+H(al.ein)+'" data-alert-label="'+H(al.label)+'" data-alert-sev="'+H(al.severity)+'" style="font-size:9px;padding:6px 10px">RESOLVE</button><button class="btn" data-alert-state="new" data-alert-ein="'+H(al.ein)+'" data-alert-label="'+H(al.label)+'" data-alert-sev="'+H(al.severity)+'" style="font-size:9px;padding:6px 10px">RESET</button></div></div>';
   }
   h+='</div></div></div>';
   el.innerHTML=h;
@@ -2344,15 +2478,31 @@ function rAlerts(){
 function rTemplates(){
   var el=document.getElementById('p-templates');
   var templates=[
-    {id:'intro',name:'First Outreach Email',body:'Subject: Quick benchmark idea for your retirement plan\\n\\nHi {{first_name}},\\n\\nI reviewed peer plans in {{industry}} and found several opportunities to reduce admin drag while improving participant outcomes.\\n\\nWould you be open to a 15-minute call next week to compare your current setup against local benchmarks?\\n\\nBest,\\n{{advisor_name}}'},
-    {id:'follow',name:'Post-Meeting Follow-up',body:'Subject: Next steps from today\\n\\nHi {{first_name}},\\n\\nThanks again for the conversation. Based on your priorities, I suggest we start with:\\n1) Provider/fee benchmark\\n2) Plan design quick wins\\n3) Participant engagement path\\n\\nIf helpful, I can send a one-page action plan before our next touchpoint.\\n\\nBest,\\n{{advisor_name}}'},
-    {id:'angle',name:'Opportunity Angle Summary',body:'Plan: {{plan_name}}\\nSignal: {{signal_name}}\\nEvidence: {{evidence}}\\nWhy this matters: {{impact}}\\nConversation starter: {{opening_question}}'}
+    {id:'intro',cat:'Outreach',name:'First Outreach Email',body:'Subject: Quick benchmark idea for your retirement plan\n\nHi {{first_name}},\n\nI reviewed peer plans in {{industry}} and found opportunities to reduce admin drag while improving participant outcomes.\n\nWould you be open to a 15-minute call next week to compare your setup against local benchmarks?\n\nBest,\n{{advisor_name}}'},
+    {id:'follow',cat:'Meeting',name:'Post-Meeting Follow-up',body:'Subject: Next steps from today\n\nHi {{first_name}},\n\nThanks again for the conversation. Based on your priorities, I suggest we start with:\n1) Provider/fee benchmark\n2) Plan design quick wins\n3) Participant engagement path\n\nI can send a one-page action plan before our next touchpoint.\n\nBest,\n{{advisor_name}}'},
+    {id:'fee',cat:'Opportunity',name:'Fee Displacement Angle',body:'Plan: {{plan_name}}\nSignal: Elevated fee ratio ({{fee_ratio}}%)\nEvidence: Peer median in {{industry}} is {{peer_fee_ratio}}%\nAdvisor angle: Show sponsor cost savings + participant impact with provider benchmarking.'},
+    {id:'filing',cat:'Ops',name:'Missing Filing Follow-up',body:'Hi {{first_name}},\n\nWe noticed your latest filing link is unavailable in public feeds.\n\nWould you like us to help retrieve and normalize the filing package so your committee has a complete review packet?\n\nBest,\n{{advisor_name}}'},
+    {id:'introcall',cat:'Call',name:'First Call Talk Track',body:'1) Confirm committee goals and current pain points.\n2) Share benchmark finding specific to {{industry}}.\n3) Propose next-step review: fees, provider lineup, participant outcomes.\n4) Secure next meeting + required data list.'},
+    {id:'angle',cat:'Opportunity',name:'Opportunity Angle Summary',body:'Plan: {{plan_name}}\nSignal: {{signal_name}}\nEvidence: {{evidence}}\nWhy this matters: {{impact}}\nConversation starter: {{opening_question}}'}
   ];
+  var grouped={};
+  for(var i=0;i<templates.length;i++){if(!grouped[templates[i].cat])grouped[templates[i].cat]=[];grouped[templates[i].cat].push(templates[i]);}
+  var cats=Object.keys(grouped);
   var h='';
-  h+='<div class="module-shell"><div class="module-hero"><div class="module-kicker">Advisor enablement</div><div class="module-title">Templates</div><div class="module-sub">Build this into a reusable playbook library: outreach, follow-ups, proposal snippets, and signal-specific talking points.</div></div>';
-  h+='<div class="module-grid"><div class="module-card"><h4>Recommended buildout</h4><ul class="module-list"><li>Template variables auto-filled from plan detail and signal evidence.</li><li>Attach templates to pipeline stage transitions.</li><li>Track template performance (reply rate, meeting conversion).</li></ul></div>';
-  h+='<div class="module-card"><h4>Template actions</h4><div class="module-row"><strong>Open Filing Analyzer</strong><button class="btn" id="tplAnalyzeBtn" style="font-size:9px;padding:6px 10px">GO</button></div><div class="module-row"><strong>Go to Pipeline</strong><button class="btn" id="tplPipeBtn" style="font-size:9px;padding:6px 10px">GO</button></div></div></div>';
-  for(var i=0;i<templates.length;i++){var tp=templates[i];h+='<div class="module-card"><h4>'+H(tp.name)+'</h4><p style="white-space:pre-wrap">'+H(tp.body)+'</p><div class="module-row"><strong>Copy template</strong><button class="btn" data-copy-template="'+H(tp.id)+'" style="font-size:9px;padding:6px 10px">COPY</button></div></div>'}
+  h+='<div class="module-shell"><div class="module-hero"><div class="module-kicker">Advisor enablement</div><div class="module-title">Template library</div><div class="module-sub">Reusable playbooks for outreach, follow-up, calls, and signal-led opportunity creation. Variables are preformatted so advisors can personalize quickly.</div></div>';
+  h+='<div class="module-grid"><div class="module-card"><h4>Library summary</h4><div class="module-row"><div><strong>Total templates</strong><span>Ready-to-use drafts</span></div><span>'+FM.n(templates.length)+'</span></div>';
+  for(var ci=0;ci<cats.length;ci++){h+='<div class="module-row"><div><strong>'+H(cats[ci])+'</strong><span>Category templates</span></div><span>'+FM.n(grouped[cats[ci]].length)+'</span></div>'}
+  h+='<div style="margin-top:10px;display:flex;gap:6px"><button class="btn" id="tplAnalyzeBtn" style="font-size:9px;padding:6px 10px">FILING ANALYZER</button><button class="btn" id="tplPipeBtn" style="font-size:9px;padding:6px 10px">PIPELINE</button></div></div>';
+  h+='<div class="module-card"><h4>Variable placeholders</h4><p>Common variables: <code>{{first_name}}</code>, <code>{{advisor_name}}</code>, <code>{{plan_name}}</code>, <code>{{industry}}</code>, <code>{{signal_name}}</code>, <code>{{evidence}}</code>.</p><p style="margin-top:8px">Tip: copy a template, replace placeholders, then log the outreach in the pipeline activity panel.</p></div></div>';
+  for(var cix=0;cix<cats.length;cix++){
+    var cat=cats[cix],arr=grouped[cat];
+    h+='<div class="module-card"><h4>'+H(cat)+' templates</h4>';
+    for(var ti=0;ti<arr.length;ti++){
+      var tp=arr[ti];
+      h+='<div style="padding:10px;border:1px solid var(--brd);border-radius:10px;background:rgba(255,255,255,.78);margin-bottom:8px"><div class="module-row"><div><strong>'+H(tp.name)+'</strong><span>ID: '+H(tp.id)+'</span></div><button class="btn" data-copy-template="'+H(tp.id)+'" style="font-size:9px;padding:6px 10px">COPY</button></div><p style="white-space:pre-wrap;margin-top:8px">'+H(tp.body)+'</p></div>';
+    }
+    h+='</div>';
+  }
   h+='</div>';
   el.innerHTML=h;
   var map={};for(var m=0;m<templates.length;m++)map[templates[m].id]=templates[m].body;
@@ -3677,7 +3827,7 @@ document.addEventListener('keydown',function(e){
   }
 
   if(e.key>='1'&&e.key<='9'&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
-    var tabs=['today','pipe','tbl','alerts','news','dash','hm','templates','analyze'];
+    var tabs=['today','tbl','pipe','alerts','news','dash','hm','templates','analyze'];
     go(tabs[parseInt(e.key)-1]);
     e.preventDefault();
     return;
