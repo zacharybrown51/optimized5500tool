@@ -590,31 +590,38 @@ body.has-news-ticker .news-ticker{top:64px}
 .module-kicker{font-family:Jost,sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--acc2);font-weight:700;margin-bottom:6px}
 .module-title{font-family:Jost,sans-serif;font-size:24px;line-height:1.1;color:var(--txh);font-weight:700}
 .module-sub{font-family:Jost,sans-serif;font-size:12px;line-height:1.6;color:var(--tx2);margin-top:7px}
-.today-shell{padding:18px;display:flex;flex-direction:column;gap:12px;background:linear-gradient(180deg,rgba(247,251,255,.7),rgba(239,246,252,.62))}
-.today-hero{border:1px solid rgba(18,51,74,.13);border-radius:18px;padding:16px 18px;background:radial-gradient(circle at top right,rgba(17,138,169,.14),transparent 45%),linear-gradient(150deg,#103148 0%,#1b4a62 62%,#255f75 100%);color:#ebf6ff;box-shadow:0 18px 32px rgba(9,28,45,.2)}
+.today-shell{padding:14px;display:flex;flex-direction:column;gap:10px;background:linear-gradient(180deg,rgba(247,251,255,.7),rgba(239,246,252,.62))}
+.today-hero{border:1px solid rgba(18,51,74,.13);border-radius:16px;padding:12px 14px;background:radial-gradient(circle at top right,rgba(17,138,169,.14),transparent 45%),linear-gradient(150deg,#103148 0%,#1b4a62 62%,#255f75 100%);color:#ebf6ff;box-shadow:0 14px 24px rgba(9,28,45,.16)}
 .today-hero .module-kicker,.today-hero .module-title,.today-hero .module-sub{color:#ebf6ff}
 .today-hero-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
 .today-last-check{font-family:IBM Plex Mono,monospace;font-size:9px;color:rgba(235,246,255,.8)}
-.today-section{border:1px solid var(--brd);border-radius:14px;padding:12px;background:rgba(255,255,255,.92);box-shadow:var(--shadow-sm)}
+.today-top-grid{display:grid;grid-template-columns:1.2fr .9fr .9fr;gap:10px}
+.today-section{border:1px solid var(--brd);border-radius:12px;padding:10px;background:rgba(255,255,255,.92);box-shadow:var(--shadow-sm)}
 .today-section h3{margin:0;font-family:Jost,sans-serif;font-size:14px;color:var(--txh)}
 .today-section-sub{font-family:Jost,sans-serif;font-size:10px;color:var(--tx3);margin-top:4px}
-.today-list{display:flex;flex-direction:column;gap:9px;margin-top:10px}
-.today-item{border:1px solid var(--brd);border-radius:12px;padding:11px;background:var(--bg3)}
+.today-list{display:flex;flex-direction:column;gap:7px;margin-top:8px}
+.today-item{border:1px solid var(--brd);border-radius:10px;padding:8px 9px;background:var(--bg3)}
 .today-item-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
 .today-item-title{font-family:Jost,sans-serif;font-size:12px;color:var(--txh);font-weight:700;line-height:1.35}
 .today-item-meta{font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--tx3)}
-.today-item-reason{font-family:Jost,sans-serif;font-size:11px;color:var(--tx2);line-height:1.5;margin-top:5px}
-.today-item-action{font-family:Jost,sans-serif;font-size:10px;color:var(--txh);margin-top:6px}
+.today-item-reason{font-family:Jost,sans-serif;font-size:10.5px;color:var(--tx2);line-height:1.45;margin-top:4px}
+.today-item-action{font-family:Jost,sans-serif;font-size:10px;color:var(--txh);margin-top:5px}
 .today-chip{display:inline-flex;align-items:center;padding:3px 7px;border-radius:999px;font-family:IBM Plex Mono,monospace;font-size:9px;border:1px solid var(--brd);background:var(--bg3);color:var(--tx3)}
 .today-chip.now{border-color:rgba(255,122,89,.35);background:rgba(255,122,89,.1);color:var(--coral)}
 .today-chip.due{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.12);color:#b7791f}
 .today-chip.opp{border-color:rgba(17,138,169,.28);background:rgba(17,138,169,.1);color:var(--acc2)}
-.today-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.today-btn{padding:6px 9px;border-radius:8px;border:1px solid var(--brd);background:var(--bg3);font-family:Jost,sans-serif;font-size:9px;font-weight:600;color:var(--tx2);cursor:pointer}
+.today-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.today-btn{padding:5px 8px;border-radius:8px;border:1px solid var(--brd);background:var(--bg3);font-family:Jost,sans-serif;font-size:9px;font-weight:600;color:var(--tx2);cursor:pointer}
 .today-btn:hover{border-color:rgba(17,138,169,.3);color:var(--acc2)}
 .today-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .today-empty{border:1px dashed var(--brd);border-radius:10px;padding:12px;background:rgba(17,138,169,.03);font-family:Jost,sans-serif;font-size:11px;color:var(--tx2)}
-@media (max-width:980px){.today-grid{grid-template-columns:1fr}.today-hero-top{flex-direction:column}}
+.today-collapsible{margin-top:2px}
+.today-collapsible summary{cursor:pointer;list-style:none;font-family:Jost,sans-serif;font-size:10px;color:var(--tx3);font-weight:700;letter-spacing:.6px;text-transform:uppercase}
+.today-collapsible summary::-webkit-details-marker{display:none}
+.today-collapsible summary:after{content:' ▾';color:var(--tx3)}
+.today-collapsible:not([open]) summary:after{content:' ▸'}
+.today-mini{font-family:Jost,sans-serif;font-size:10px;color:var(--tx2);line-height:1.4}
+@media (max-width:1050px){.today-top-grid{grid-template-columns:1fr}.today-grid{grid-template-columns:1fr}.today-hero-top{flex-direction:column}}
 .news-shell{padding:20px 18px 22px;display:flex;flex-direction:column;gap:14px;background:linear-gradient(180deg,rgba(247,251,255,.75),rgba(239,246,252,.68))}
 .news-hero{position:relative;border:1px solid rgba(18,51,74,.13);border-radius:20px;padding:18px 20px 16px;background:radial-gradient(circle at top right,rgba(17,138,169,.16),transparent 45%),linear-gradient(145deg,#0d2e45 0%,#174664 55%,#1f5670 100%);color:#e8f4ff;box-shadow:0 20px 38px rgba(8,26,42,.25)}
 .news-hero .module-kicker{color:#9dd8f0}
@@ -2640,23 +2647,36 @@ function rToday(){
   }
   var h='';
   h+='<div class="today-shell"><div class="today-hero"><div class="today-hero-top"><div><div class="module-kicker">Daily command center</div><div class="module-title">Today, '+H(UI_PREFS.advisorName)+'</div><div class="module-sub">Know what to do first, what changed, and where to act next.</div></div><div class="today-last-check">'+H(fmtLastSeen(lastSeen))+'</div></div></div>';
-  h+='<div class="today-section"><h3>Focus Today</h3><div class="today-section-sub">Top actions across alerts, follow-ups, and high-priority prospects.</div><div class="today-list">';
-  for(var fi=0;fi<focusList.length;fi++){
+  h+='<div class="today-top-grid"><div class="today-section"><h3>Focus Today</h3><div class="today-section-sub">Top actions only (max 3 shown).</div><div class="today-list">';
+  for(var fi=0;fi<Math.min(3,focusList.length);fi++){
     var f=focusList[fi];
     var kindLabel=f.kind==='pipeline'?'Pipeline':(f.kind==='alert'?'Alert':'Prospect');
     var gotoLabel=(f.openTab||'tbl').toUpperCase();
     h+='<div class="today-item"><div class="today-item-head"><div><div class="today-item-title">'+H(f.title)+'</div><div class="today-item-meta">'+H(kindLabel)+'</div></div><span class="today-chip '+H(f.chipClass||'opp')+'">'+H(f.chipLabel||'Action')+'</span></div><div class="today-item-reason">'+H(f.reason)+'</div><div class="today-item-action">Action: '+H(f.actionText)+'</div><div class="today-actions"><button class="today-btn" data-today-open="'+H(f.ein||'')+'">View plan</button><button class="today-btn" data-today-follow="'+H(f.ein||'')+'">Follow up</button><button class="today-btn" data-today-goto="'+H(f.openTab||'tbl')+'">Open '+H(gotoLabel)+'</button></div></div>';
   }
   h+='</div></div>';
-  h+='<div class="today-section"><h3>What Changed</h3><div class="today-section-sub">Updates since your last check that are worth acting on.</div><div class="today-list">';
-  for(var ci=0;ci<changedList.length;ci++){
+  h+='<div class="today-section"><h3>What Changed</h3><div class="today-section-sub">Since your last check.</div><div class="today-list">';
+  for(var ci=0;ci<Math.min(2,changedList.length);ci++){
     var c=changedList[ci];
-    h+='<div class="today-item"><div class="today-item-head"><div class="today-item-title">'+H(c.title)+'</div><span class="today-chip">'+H(c.type.toUpperCase())+'</span></div><div class="today-item-reason">'+H(c.why)+'</div><div class="today-item-action">Why care: '+H(c.action)+'</div><div class="today-actions"><button class="today-btn" data-today-open="'+H(c.ein||'')+'">Open plan</button><button class="today-btn" data-today-pipe="'+H(c.ein||'')+'">Open pipeline</button></div></div>';
+    h+='<div class="today-item"><div class="today-item-head"><div class="today-item-title">'+H(c.title)+'</div><span class="today-chip">'+H(c.type.toUpperCase())+'</span></div><div class="today-item-reason">'+H(c.action)+'</div><div class="today-actions"><button class="today-btn" data-today-open="'+H(c.ein||'')+'">Open</button><button class="today-btn" data-today-pipe="'+H(c.ein||'')+'">Pipeline</button></div></div>';
   }
-  h+='</div></div>';
-  h+='<div class="today-grid"><div class="today-section"><h3>Pipeline Momentum</h3><div class="today-section-sub">Due now, stuck records, and recently advanced plans.</div>';
-  h+='<div class="today-list">';
-  h+='<div class="today-item"><div class="today-item-title">'+FM.n(todayStats.overdue)+' overdue · '+FM.n(todayStats.today)+' due today · '+FM.n(todayStats.week)+' due this week</div><div class="today-item-reason">These follow-ups drive immediate execution quality.</div><div class="today-actions"><button class="today-btn" data-today-goto="pipe">Open pipeline board</button><button class="today-btn" data-today-goto="alerts">Open alerts</button></div></div>';
+  h+='<details class="today-collapsible"><summary>Show all changes ('+FM.n(changedList.length)+')</summary><div class="today-list">';
+  for(var cix=2;cix<Math.min(changedList.length,8);cix++){
+    var cx=changedList[cix];
+    h+='<div class="today-item"><div class="today-item-head"><div class="today-item-title">'+H(cx.title)+'</div><span class="today-chip">'+H(cx.type.toUpperCase())+'</span></div><div class="today-item-reason">'+H(cx.why)+'</div><div class="today-actions"><button class="today-btn" data-today-open="'+H(cx.ein||'')+'">Open plan</button><button class="today-btn" data-today-pipe="'+H(cx.ein||'')+'">Open pipeline</button></div></div>';
+  }
+  h+='</div></details></div>';
+  h+='<div class="today-section"><h3>Pipeline Now</h3><div class="today-section-sub">Critical momentum snapshot.</div><div class="today-list">';
+  h+='<div class="today-item"><div class="today-item-title">'+FM.n(todayStats.overdue)+' overdue · '+FM.n(todayStats.today)+' due today · '+FM.n(todayStats.week)+' due this week</div><div class="today-actions"><button class="today-btn" data-today-goto="pipe">Open pipeline</button><button class="today-btn" data-today-goto="alerts">Open alerts</button></div></div>';
+  if(stuck.length){
+    var st0=stuck[0],stDays0=daysSince(st0.item.updatedAt||0);
+    h+='<div class="today-item"><div class="today-item-head"><div class="today-item-title">'+H(st0.item.name||st0.item.sponsor||st0.item.ein)+'</div><span class="today-chip due">Stuck '+stDays0+'d</span></div><div class="today-actions"><button class="today-btn" data-today-log="'+H(st0.item.ein)+'">Log activity</button><button class="today-btn" data-today-stage="'+H(st0.item.ein)+'">Move stage</button></div></div>';
+  }else{
+    h+='<div class="today-mini">No stuck opportunities right now.</div>';
+  }
+  h+='</div></div></div>';
+  h+='<div class="today-grid"><div class="today-section"><h3>Pipeline Momentum</h3><div class="today-section-sub">Expanded queue (on demand).</div>';
+  h+='<details class="today-collapsible"><summary>Expand pipeline details</summary><div class="today-list">';
   if(stuck.length){
     for(var si=0;si<Math.min(3,stuck.length);si++){
       var st=stuck[si],stDays=daysSince(st.item.updatedAt||0);
@@ -2671,15 +2691,27 @@ function rToday(){
       h+='<div class="today-item"><div class="today-item-head"><div class="today-item-title">'+H(av.item.name||av.item.sponsor||av.item.ein)+'</div><span class="today-chip opp">Advanced</span></div><div class="today-item-reason">Recently moved to '+H(stageLabel(av.item.stage||'new'))+'.</div><div class="today-actions"><button class="today-btn" data-today-open="'+H(av.item.ein)+'">Open plan</button><button class="today-btn" data-today-follow="'+H(av.item.ein)+'">Set next touch</button></div></div>';
     }
   }
-  h+='</div></div>';
-  h+='<div class="today-section"><h3>Opportunities</h3><div class="today-section-sub">Curated plans to review next (not exhaustive).</div><div class="today-list">';
+  h+='</div></details></div>';
+  h+='<div class="today-section"><h3>Opportunities</h3><div class="today-section-sub">Top opportunities only.</div><div class="today-list">';
   for(var oi=0;oi<Math.min(5,oppList.length);oi++){
     var op=oppList[oi],plan=op.plan,sig=[];
     if(!plan[20])sig.push('no advisor listed');
     if((plan[31]||0)>1.75)sig.push('high fees');
     if((plan[6]||0)>=12)sig.push('strong growth');
     if(!sig.length)sig.push('high score fit');
-    h+='<div class="today-item"><div class="today-item-head"><div class="today-item-title">'+FM.usd(plan[4]||0)+' plan — '+H(plan[0])+'</div><span class="today-chip opp">Score '+(plan[12]||0)+'</span></div><div class="today-item-reason">'+H(sig.slice(0,2).join(' · '))+'</div><div class="today-item-action">Action: qualify fit, then add to pipeline if timing is right.</div><div class="today-actions"><button class="today-btn" data-today-open="'+H(plan[14])+'">View plan</button><button class="today-btn" data-today-add="'+H(plan[14])+'">Add to pipeline</button><button class="today-btn" data-today-goto="tbl">Open prospects</button></div></div>';
+    if(oi<2)h+='<div class="today-item"><div class="today-item-head"><div class="today-item-title">'+FM.usd(plan[4]||0)+' plan — '+H(plan[0])+'</div><span class="today-chip opp">Score '+(plan[12]||0)+'</span></div><div class="today-item-reason">'+H(sig.slice(0,2).join(' · '))+'</div><div class="today-actions"><button class="today-btn" data-today-open="'+H(plan[14])+'">View plan</button><button class="today-btn" data-today-add="'+H(plan[14])+'">Add</button></div></div>';
+  }
+  if(oppList.length>2){
+    h+='<details class="today-collapsible"><summary>Show more opportunities ('+FM.n(Math.min(5,oppList.length)-2)+')</summary><div class="today-list">';
+    for(var oi2=2;oi2<Math.min(5,oppList.length);oi2++){
+      var op2=oppList[oi2],pl2=op2.plan,sig2=[];
+      if(!pl2[20])sig2.push('no advisor listed');
+      if((pl2[31]||0)>1.75)sig2.push('high fees');
+      if((pl2[6]||0)>=12)sig2.push('strong growth');
+      if(!sig2.length)sig2.push('high score fit');
+      h+='<div class="today-item"><div class="today-item-head"><div class="today-item-title">'+FM.usd(pl2[4]||0)+' plan — '+H(pl2[0])+'</div><span class="today-chip opp">Score '+(pl2[12]||0)+'</span></div><div class="today-item-reason">'+H(sig2.slice(0,2).join(' · '))+'</div><div class="today-actions"><button class="today-btn" data-today-open="'+H(pl2[14])+'">View plan</button><button class="today-btn" data-today-add="'+H(pl2[14])+'">Add to pipeline</button><button class="today-btn" data-today-goto="tbl">Prospects</button></div></div>';
+    }
+    h+='</div></details>';
   }
   if(!oppList.length)h+='<div class="today-empty">Nothing surfaced at the top tier. Review the Prospects tab for secondary candidates.</div>';
   h+='</div></div></div></div>';
