@@ -629,12 +629,38 @@ body.has-news-ticker .news-ticker{top:64px}
 .news-mini{padding:5px 8px;border-radius:8px;border:1px solid var(--brd);background:var(--bg3);font-family:Jost,sans-serif;font-size:9px;font-weight:600;color:var(--tx2);cursor:pointer}
 .news-mini:hover{border-color:rgba(17,138,169,.3);color:var(--acc2)}
 @media (max-width:980px){.news-grid{grid-template-columns:1fr}.news-controls{grid-template-columns:1fr}.news-search{width:100%}}
+.tpl-shell{padding:20px 18px 24px;display:flex;flex-direction:column;gap:14px;background:linear-gradient(180deg,rgba(255,251,246,.65),rgba(246,250,255,.72))}
+.tpl-hero{position:relative;border:1px solid rgba(18,51,74,.12);border-radius:20px;padding:18px 20px;background:linear-gradient(140deg,#17354a 0%,#275877 52%,#2f6f86 100%);color:#eef7ff;box-shadow:0 18px 36px rgba(11,27,42,.24)}
+.tpl-hero .module-title,.tpl-hero .module-sub,.tpl-hero .module-kicker{color:#eef7ff}
+.tpl-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(360px,.9fr);gap:12px}
+.tpl-card{border:1px solid var(--brd);border-radius:14px;padding:13px;background:rgba(255,255,255,.93);box-shadow:var(--shadow-sm)}
+.tpl-card h4{margin:0 0 8px;font-family:Jost,sans-serif;font-size:12px;color:var(--txh)}
+.tpl-input-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.tpl-input,.tpl-select{width:100%;padding:8px 10px;border-radius:9px;border:1px solid var(--brd);background:rgba(255,255,255,.92);font-family:Jost,sans-serif;font-size:12px;color:var(--tx)}
+.tpl-cat-row{display:flex;gap:8px;flex-wrap:wrap}
+.tpl-cat-btn{padding:7px 10px;border-radius:999px;border:1px solid var(--brd);background:rgba(255,255,255,.88);font-family:Jost,sans-serif;font-size:10px;font-weight:600;color:var(--tx2);cursor:pointer}
+.tpl-cat-btn.active{border-color:rgba(17,138,169,.3);background:rgba(17,138,169,.1);color:var(--acc2)}
+.tpl-template{padding:11px;border:1px solid var(--brd);border-radius:11px;background:rgba(17,138,169,.03);margin-top:9px}
+.tpl-template-title{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.tpl-template-name{font-family:Jost,sans-serif;font-size:12px;font-weight:700;color:var(--txh)}
+.tpl-template-meta{font-family:Jost,sans-serif;font-size:10px;color:var(--tx3);margin-top:3px}
+.tpl-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.tpl-btn{padding:6px 9px;border-radius:8px;border:1px solid var(--brd);background:var(--bg3);font-family:Jost,sans-serif;font-size:9px;font-weight:600;color:var(--tx2);cursor:pointer}
+.tpl-btn:hover{border-color:rgba(17,138,169,.3);color:var(--acc2)}
+@media (max-width:980px){.tpl-grid{grid-template-columns:1fr}.tpl-input-grid{grid-template-columns:1fr}}
 
 /* Settings overlay */
 .settings-ov{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);z-index:6000;display:none;align-items:center;justify-content:center}
 .settings-ov.open{display:flex}
 .settings-card{background:#fff;border:1px solid var(--brd);border-radius:16px;padding:28px 32px;max-width:720px;width:95%;box-shadow:var(--shadow-md);font-family:Jost,sans-serif;color:var(--tx);max-height:90vh;overflow-y:auto}
 body.dark .settings-card{background:#1a2a3a}
+.settings-modern-hero{padding:14px 16px;border:1px solid var(--brd);border-radius:14px;background:linear-gradient(135deg,rgba(17,138,169,.12),rgba(17,138,169,.03));margin-bottom:14px}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.settings-card-mini{padding:10px;border:1px solid var(--brd);border-radius:10px;background:var(--bg3)}
+.settings-card-mini h5{margin:0 0 6px;font-size:11px;color:var(--txh)}
+.settings-card-mini p{margin:0;font-size:10px;color:var(--tx3);line-height:1.45}
+.settings-select{width:100%;padding:7px 9px;border:1px solid var(--brd);border-radius:8px;background:var(--bg3);font-family:Jost,sans-serif;font-size:12px;color:var(--tx)}
+@media (max-width:900px){.settings-grid{grid-template-columns:1fr}}
 .score-slider{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--brd)}
 .score-slider:last-child{border-bottom:none}
 .score-slider-label{flex:1;font-size:11px;color:var(--tx2)}
@@ -1200,6 +1226,7 @@ function renderMarketStrip(quotes){
 var latestNewsItems=[];
 var newsFeedMeta={status:'idle',updatedAt:0,endpoint:'',error:''};
 var newsView={focus:'all',query:'',urgentOnly:false};
+var templateView={category:'all',query:''};
 function normalizeNewsItem(raw){
   raw=raw||{};
   var published=raw.publishedAt||raw.pubDate||raw.date||raw.published_at||'';
@@ -1456,10 +1483,22 @@ var UI_PREFS=(function(){
       advisorName:raw.advisorName||'Advisor',
       idealSegment:raw.idealSegment||'401(k) plans with fee + provider displacement potential',
       homeRegion:raw.homeRegion||'San Diego County',
-      sidebarCollapsed:!!raw.sidebarCollapsed
+      sidebarCollapsed:!!raw.sidebarCollapsed,
+      advisorTitle:raw.advisorTitle||'Retirement Plan Advisor',
+      templateSignature:raw.templateSignature||'Warmly,\\n{{advisor_name}}',
+      defaultContactName:raw.defaultContactName||'there',
+      defaultCompanyName:raw.defaultCompanyName||'your team',
+      outreachTone:raw.outreachTone||'warm',
+      outreachLength:raw.outreachLength||'standard',
+      todayQueueLimit:Math.min(15,Math.max(5,parseInt(raw.todayQueueLimit||8,10)||8)),
+      todayPriorityLimit:Math.min(12,Math.max(4,parseInt(raw.todayPriorityLimit||8,10)||8)),
+      newsDefaultFocus:raw.newsDefaultFocus||'all',
+      newsUrgentDefault:!!raw.newsUrgentDefault,
+      alertsDefaultFilter:raw.alertsDefaultFilter||'open',
+      feeAlertThreshold:isFinite(parseFloat(raw.feeAlertThreshold))?parseFloat(raw.feeAlertThreshold):1.35
     };
   }catch(e){
-    return {advisorName:'Advisor',idealSegment:'401(k) plans with fee + provider displacement potential',homeRegion:'San Diego County',sidebarCollapsed:false};
+    return {advisorName:'Advisor',idealSegment:'401(k) plans with fee + provider displacement potential',homeRegion:'San Diego County',sidebarCollapsed:false,advisorTitle:'Retirement Plan Advisor',templateSignature:'Warmly,\\n{{advisor_name}}',defaultContactName:'there',defaultCompanyName:'your team',outreachTone:'warm',outreachLength:'standard',todayQueueLimit:8,todayPriorityLimit:8,newsDefaultFocus:'all',newsUrgentDefault:false,alertsDefaultFilter:'open',feeAlertThreshold:1.35};
   }
 })();
 function saveUIPrefs(){
@@ -1470,7 +1509,9 @@ function refreshWorkspaceChrome(){
   if(regionEl)regionEl.textContent=(UI_PREFS.homeRegion||'San Diego County').toUpperCase();
 }
 var pipeline={},pipelineFilter='all',pipelineSearch='',draggedPipelineEin='';
-var alertsFilter='open';
+newsView.focus=UI_PREFS.newsDefaultFocus||'all';
+newsView.urgentOnly=!!UI_PREFS.newsUrgentDefault;
+var alertsFilter=UI_PREFS.alertsDefaultFilter||'open';
 var alertState=(function(){
   try{return JSON.parse(localStorage.getItem('mammini_alert_state')||'{}')||{}}catch(e){return {}}
 })();
@@ -2418,7 +2459,7 @@ function rToday(){
   });
   unscheduled.sort(function(a,b){return (b.item.score||0)-(a.item.score||0);});
   watch.sort(function(a,b){return b.riskScore-a.riskScore||((a.plan[6]||0)-(b.plan[6]||0));});
-  var priorities=buildTodayPriorities(8);
+  var priorities=buildTodayPriorities(UI_PREFS.todayPriorityLimit||8);
   var ownerRows=Object.keys(owners).sort(function(a,b){return owners[b]-owners[a];});
   var h='';
   h+='<div class="module-shell"><div class="module-hero"><div class="module-kicker">Daily execution</div><div class="module-title">Today, '+H(UI_PREFS.advisorName)+'</div><div class="module-sub">Execution queue for '+H(UI_PREFS.idealSegment)+'. Focus on overdue follow-up, high-intent opportunities, and at-risk pipeline records.</div></div>';
@@ -2430,7 +2471,7 @@ function rToday(){
 
   h+='<div class="module-grid"><div class="module-card"><h4>Priority touches</h4>';
   if(!queue.length)h+='<p>No next-touch dates set. Add dates in Pipeline to generate an actionable daily list.</p>';
-  for(var i=0;i<Math.min(queue.length,10);i++){
+  for(var i=0;i<Math.min(queue.length,UI_PREFS.todayQueueLimit||8);i++){
     var q=queue[i],qn=q.item.name||q.item.sponsor||q.item.ein;
     h+='<div class="module-row"><div><strong>'+H(qn)+'</strong><span>'+H(q.item.owner||'Unassigned')+' · '+H(q.bucket.label)+'</span></div><button class="btn" data-open-risk="'+H(q.item.ein)+'" style="font-size:9px;padding:6px 10px">OPEN</button></div>';
   }
@@ -2531,9 +2572,10 @@ function rNews(){
 }
 function buildAlerts(){
   var alerts=[];
+  var feeThresh=isFinite(UI_PREFS.feeAlertThreshold)?UI_PREFS.feeAlertThreshold:1.35;
   for(var i=0;i<D.length;i++){
     var p=D[i],sev='Medium';
-    if((p[31]||0)>1.35){sev=(p[31]>1.8?'High':'Medium');alerts.push({severity:sev,type:'Fee displacement',label:'Fee ratio above peer band',detail:p[0]+' · '+p[31]+'% expense ratio',ein:p[14]});}
+    if((p[31]||0)>feeThresh){sev=(p[31]>(feeThresh+.45)?'High':'Medium');alerts.push({severity:sev,type:'Fee displacement',label:'Fee ratio above peer band',detail:p[0]+' · '+p[31]+'% expense ratio',ein:p[14]});}
     if((p[6]||0)<-20){alerts.push({severity:'High',type:'Growth deterioration',label:'Sharp asset decline',detail:p[0]+' · '+FM.p(p[6])+' YoY growth',ein:p[14]});}
     if(!p[13]){alerts.push({severity:'Medium',type:'Data quality',label:'Missing filing URL',detail:p[0]+' · needs filing retrieval',ein:p[14]});}
     if(!p[20]&&(p[12]||0)>=85){alerts.push({severity:'High',type:'No-advisor opportunity',label:'High-score plan without advisor',detail:p[0]+' · score '+p[12],ein:p[14]});}
@@ -2586,37 +2628,73 @@ function rAlerts(){
 function rTemplates(){
   var el=document.getElementById('p-templates');
   var templates=[
-    {id:'intro',cat:'Outreach',name:'First Outreach Email',body:'Subject: Quick benchmark idea for your retirement plan\n\nHi {{first_name}},\n\nI reviewed peer plans in {{industry}} and found opportunities to reduce admin drag while improving participant outcomes.\n\nWould you be open to a 15-minute call next week to compare your setup against local benchmarks?\n\nBest,\n{{advisor_name}}'},
-    {id:'follow',cat:'Meeting',name:'Post-Meeting Follow-up',body:'Subject: Next steps from today\n\nHi {{first_name}},\n\nThanks again for the conversation. Based on your priorities, I suggest we start with:\n1) Provider/fee benchmark\n2) Plan design quick wins\n3) Participant engagement path\n\nI can send a one-page action plan before our next touchpoint.\n\nBest,\n{{advisor_name}}'},
-    {id:'fee',cat:'Opportunity',name:'Fee Displacement Angle',body:'Plan: {{plan_name}}\nSignal: Elevated fee ratio ({{fee_ratio}}%)\nEvidence: Peer median in {{industry}} is {{peer_fee_ratio}}%\nAdvisor angle: Show sponsor cost savings + participant impact with provider benchmarking.'},
-    {id:'filing',cat:'Ops',name:'Missing Filing Follow-up',body:'Hi {{first_name}},\n\nWe noticed your latest filing link is unavailable in public feeds.\n\nWould you like us to help retrieve and normalize the filing package so your committee has a complete review packet?\n\nBest,\n{{advisor_name}}'},
-    {id:'introcall',cat:'Call',name:'First Call Talk Track',body:'1) Confirm committee goals and current pain points.\n2) Share benchmark finding specific to {{industry}}.\n3) Propose next-step review: fees, provider lineup, participant outcomes.\n4) Secure next meeting + required data list.'},
-    {id:'angle',cat:'Opportunity',name:'Opportunity Angle Summary',body:'Plan: {{plan_name}}\nSignal: {{signal_name}}\nEvidence: {{evidence}}\nWhy this matters: {{impact}}\nConversation starter: {{opening_question}}'}
+    {id:'first_outreach_email',cat:'Email',name:'Warm first outreach email',intent:'Book a short intro call',body:"Subject: Quick idea to support {{company_name}}'s retirement plan\\n\\nHi {{first_name}},\\n\\nI hope your week is going well. I support plan sponsors in {{region}} and noticed several plans similar to {{company_name}} are reducing participant costs while improving engagement.\\n\\nIf helpful, I can share a concise benchmark view covering fees, service model, and participant outcomes. Would a {{meeting_window}} intro conversation next week be useful?\\n\\nNo prep needed on your end—I\\'ll keep it practical and sponsor-friendly.\\n\\n{{signature}}"},
+    {id:'post_meeting_recap',cat:'Email',name:'Post-meeting recap + next steps',intent:'Confirm decisions and momentum',body:"Subject: Thank you + next steps for {{company_name}}'s plan\\n\\nHi {{first_name}},\\n\\nThank you for the thoughtful conversation today. Based on what matters most to your committee, here are the three actions we discussed:\\n1) Benchmark current plan fees and provider support\\n2) Identify one design change to improve participation\\n3) Build a clean timeline for committee review\\n\\nI\\'ll send the benchmark snapshot before our next check-in. If you\\'d like, I can also prepare a one-page committee brief you can forward internally.\\n\\n{{signature}}"},
+    {id:'fiduciary_brief',cat:'Committee',name:'Committee update talking points',intent:'Support fiduciary communication',body:"Committee Brief: {{company_name}} Retirement Plan\\n\\nWhat changed:\\n- {{signal_name}}\\n\\nWhy it matters to participants:\\n- {{impact}}\\n\\nRecommendation:\\n- {{recommendation}}\\n\\nSuggested committee action this quarter:\\n- Approve a focused fee + service benchmark review\\n- Document fiduciary rationale and participant impact\\n\\nPrepared by: {{advisor_name}}, {{advisor_title}}"},
+    {id:'fee_displacement_angle',cat:'Opportunity',name:'Fee displacement outreach angle',intent:'Open a value-focused conversation',body:"Opportunity Summary\\n\\nPlan sponsor: {{company_name}}\\nSignal observed: Elevated fee ratio ({{fee_ratio}}%)\\nPeer reference: {{peer_fee_ratio}}% in similar plans\\n\\nWarm outreach opener:\\n\\\"{{first_name}}, I reviewed public filings for plans similar to yours and noticed an opportunity to potentially reduce participant costs without increasing admin burden. Would you be open to a short benchmark conversation?\\\"\\n\\n{{signature}}"},
+    {id:'call_talk_track',cat:'Call',name:'15-minute first call talk track',intent:'Structure a confident first call',body:"First 15-minute call flow\\n\\nMinute 1-3: Build context\\n- Thank them for time and clarify committee priorities.\\n\\nMinute 4-8: Share one useful observation\\n- Mention one benchmark insight relevant to {{company_name}}.\\n\\nMinute 9-12: Align on value\\n- Ask where sponsor and participant experience feels most friction-heavy.\\n\\nMinute 13-15: Confirm next step\\n- Offer a concise action brief and schedule the next checkpoint ({{meeting_window}}).\\n\\nClose warmly:\\n\\\"I appreciate your time, {{first_name}}. I\\'ll keep everything practical and easy to review.\\\""},
+    {id:'missing_filing_followup',cat:'Operations',name:'Missing filing follow-up note',intent:'Request data completion gracefully',body:"Hi {{first_name}},\\n\\nQuick note: we couldn't locate a complete filing package for {{company_name}} in the public feed. This is common and easy to fix.\\n\\nIf helpful, I can coordinate retrieval and provide a clean summary for your committee records so reviews stay efficient and well documented.\\n\\nWould you like me to send a simple checklist of what we need?\\n\\n{{signature}}"},
+    {id:'client_checkin',cat:'Client Care',name:'Quarterly client check-in',intent:'Strengthen ongoing relationships',body:"Subject: Quick quarterly check-in\\n\\nHi {{first_name}},\\n\\nI wanted to check in and make sure your plan priorities for this quarter are fully supported.\\n\\nIf useful, I can send a one-page snapshot covering:\\n- Participant engagement trend\\n- Service response quality\\n- Fee and provider positioning\\n\\nIf there's one topic you want to prioritize, I\\'ll tailor everything around that.\\n\\n{{signature}}"}
   ];
-  var grouped={};
-  for(var i=0;i<templates.length;i++){if(!grouped[templates[i].cat])grouped[templates[i].cat]=[];grouped[templates[i].cat].push(templates[i]);}
-  var cats=Object.keys(grouped);
-  var h='';
-  h+='<div class="module-shell"><div class="module-hero"><div class="module-kicker">Advisor enablement</div><div class="module-title">Template library</div><div class="module-sub">Reusable playbooks for outreach, follow-up, calls, and signal-led opportunity creation. Variables are preformatted so advisors can personalize quickly.</div></div>';
-  h+='<div class="module-grid"><div class="module-card"><h4>Library summary</h4><div class="module-row"><div><strong>Total templates</strong><span>Ready-to-use drafts</span></div><span>'+FM.n(templates.length)+'</span></div>';
-  for(var ci=0;ci<cats.length;ci++){h+='<div class="module-row"><div><strong>'+H(cats[ci])+'</strong><span>Category templates</span></div><span>'+FM.n(grouped[cats[ci]].length)+'</span></div>'}
-  h+='<div style="margin-top:10px;display:flex;gap:6px"><button class="btn" id="tplAnalyzeBtn" style="font-size:9px;padding:6px 10px">FILING ANALYZER</button><button class="btn" id="tplPipeBtn" style="font-size:9px;padding:6px 10px">PIPELINE</button></div></div>';
-  h+='<div class="module-card"><h4>Variable placeholders</h4><p>Common variables: <code>{{first_name}}</code>, <code>{{advisor_name}}</code>, <code>{{plan_name}}</code>, <code>{{industry}}</code>, <code>{{signal_name}}</code>, <code>{{evidence}}</code>.</p><p style="margin-top:8px">Tip: copy a template, replace placeholders, then log the outreach in the pipeline activity panel.</p></div></div>';
-  for(var cix=0;cix<cats.length;cix++){
-    var cat=cats[cix],arr=grouped[cat];
-    h+='<div class="module-card"><h4>'+H(cat)+' templates</h4>';
-    for(var ti=0;ti<arr.length;ti++){
-      var tp=arr[ti];
-      h+='<div style="padding:10px;border:1px solid var(--brd);border-radius:10px;background:rgba(255,255,255,.78);margin-bottom:8px"><div class="module-row"><div><strong>'+H(tp.name)+'</strong><span>ID: '+H(tp.id)+'</span></div><button class="btn" data-copy-template="'+H(tp.id)+'" style="font-size:9px;padding:6px 10px">COPY</button></div><p style="white-space:pre-wrap;margin-top:8px">'+H(tp.body)+'</p></div>';
-    }
-    h+='</div>';
+  function fillTemplate(tp,vars){
+    return tp.body.replace(/\\{\\{\\s*([a-z_]+)\\s*\\}\\}/gi,function(_,k){return vars[k]||''});
   }
-  h+='</div>';
+  var vars={
+    advisor_name:UI_PREFS.advisorName||'Advisor',
+    advisor_title:UI_PREFS.advisorTitle||'Retirement Plan Advisor',
+    first_name:UI_PREFS.defaultContactName||'there',
+    company_name:UI_PREFS.defaultCompanyName||'your team',
+    region:UI_PREFS.homeRegion||'your region',
+    industry:(UI_PREFS.idealSegment||'retirement plans').split(' with ')[0],
+    signal_name:'Fee pressure and service model mismatch',
+    impact:'Potentially higher participant cost and lower confidence in plan value.',
+    recommendation:'Run a fee + service benchmark and present alternatives with documented fiduciary rationale.',
+    meeting_window:'15–20 minute',
+    fee_ratio:(UI_PREFS.feeAlertThreshold||1.35).toFixed(2),
+    peer_fee_ratio:'0.95',
+    signature:(UI_PREFS.templateSignature||'Warmly,\\n{{advisor_name}}').replace(/\\{\\{\\s*advisor_name\\s*\\}\\}/g,UI_PREFS.advisorName||'Advisor')
+  };
+  var q=(templateView.query||'').toLowerCase().trim();
+  var filtered=templates.filter(function(tp){
+    if(templateView.category!=='all'&&tp.cat!==templateView.category)return false;
+    if(!q)return true;
+    return (tp.name+' '+tp.intent+' '+tp.body).toLowerCase().indexOf(q)>=0;
+  });
+  var categories=['all'];for(var c=0;c<templates.length;c++){if(categories.indexOf(templates[c].cat)<0)categories.push(templates[c].cat)}
+  var h='';
+  h+='<div class="tpl-shell"><div class="tpl-hero"><div class="module-kicker">You-focused advisor communication</div><div class="module-title">Template Studio</div><div class="module-sub">Create warm, practical outreach in seconds. Every button has one purpose: personalize, preview, copy, or route your next action.</div></div>';
+  h+='<div class="tpl-grid"><div class="tpl-card"><h4>Personalization profile</h4><div class="tpl-input-grid"><input class="tpl-input" id="tplFirstName" value="'+H(vars.first_name)+'" placeholder="Contact first name"><input class="tpl-input" id="tplCompanyName" value="'+H(vars.company_name)+'" placeholder="Plan sponsor / company"><input class="tpl-input" id="tplMeetingWindow" value="'+H(vars.meeting_window)+'" placeholder="e.g. 15-minute"><input class="tpl-input" id="tplSignalName" value="'+H(vars.signal_name)+'" placeholder="Primary signal"></div><div style="margin-top:8px"><textarea class="tpl-input" id="tplSignature" style="min-height:74px;resize:vertical" placeholder="Warmly,\\n'+H(UI_PREFS.advisorName)+'">'+H(vars.signature)+'</textarea></div><div class="tpl-actions"><button class="tpl-btn" id="tplApplyVars">APPLY TO PREVIEW</button><button class="tpl-btn" id="tplSaveDefaults">SAVE AS DEFAULTS</button><button class="tpl-btn" id="tplOpenSettings">OPEN SETTINGS</button></div></div>';
+  h+='<div class="tpl-card"><h4>Library controls</h4><div class="tpl-cat-row">';
+  for(var ci=0;ci<categories.length;ci++){var cat=categories[ci],label=cat==='all'?'All templates':cat;h+='<button class="tpl-cat-btn'+(templateView.category===cat?' active':'')+'" data-tpl-cat="'+H(cat)+'">'+H(label)+'</button>'}
+  h+='</div><div style="margin-top:8px"><input class="tpl-input" id="tplSearchInput" placeholder="Search templates by intent or language..." value="'+H(templateView.query||'')+'"></div><div class="tpl-actions"><button class="tpl-btn" id="tplCopyAll">COPY CURRENT PREVIEW</button><button class="tpl-btn" id="tplAnalyzeBtn">OPEN FILING ANALYZER</button><button class="tpl-btn" id="tplPipeBtn">OPEN PIPELINE</button></div><p style="font-family:Jost,sans-serif;font-size:10px;color:var(--tx3);margin:8px 0 0">Templates shown: '+FM.n(filtered.length)+' of '+FM.n(templates.length)+'.</p></div></div>';
+  h+='<div class="tpl-card"><h4>Template previews</h4>';
+  if(!filtered.length)h+='<p style="font-family:Jost,sans-serif;font-size:11px;color:var(--tx2)">No templates match your filter.</p>';
+  for(var i=0;i<filtered.length;i++){
+    var tp=filtered[i],preview=fillTemplate(tp,vars);
+    h+='<div class="tpl-template"><div class="tpl-template-title"><div><div class="tpl-template-name">'+H(tp.name)+'</div><div class="tpl-template-meta">'+H(tp.cat)+' · '+H(tp.intent)+'</div></div><span class="news-tag">'+H(tp.cat.toUpperCase())+'</span></div><p style="white-space:pre-wrap;font-family:Jost,sans-serif;font-size:11px;line-height:1.58;color:var(--tx2);margin:8px 0 0">'+H(preview)+'</p><div class="tpl-actions"><button class="tpl-btn" data-tpl-copy="'+H(tp.id)+'">COPY TEMPLATE</button><button class="tpl-btn" data-tpl-copy-subject="'+H(tp.id)+'">COPY SUBJECT</button><button class="tpl-btn" data-tpl-use-news="1">OPEN NEWSROOM</button></div></div>';
+  }
+  h+='</div></div>';
   el.innerHTML=h;
-  var map={};for(var m=0;m<templates.length;m++)map[templates[m].id]=templates[m].body;
-  document.querySelectorAll('[data-copy-template]').forEach(function(btn){btn.addEventListener('click',function(){var id=this.dataset.copyTemplate;var body=map[id]||'';navigator.clipboard.writeText(body).then(function(){toast('Template copied','success')}).catch(function(){toast('Clipboard blocked in this browser','warn')})})});
+  var currentVars=Object.assign({},vars);
+  function collectVars(){
+    currentVars.first_name=((document.getElementById('tplFirstName')||{}).value||'there').trim()||'there';
+    currentVars.company_name=((document.getElementById('tplCompanyName')||{}).value||'your team').trim()||'your team';
+    currentVars.meeting_window=((document.getElementById('tplMeetingWindow')||{}).value||'15–20 minute').trim()||'15–20 minute';
+    currentVars.signal_name=((document.getElementById('tplSignalName')||{}).value||'Fee pressure and service model mismatch').trim();
+    currentVars.signature=((document.getElementById('tplSignature')||{}).value||('Warmly,\\n'+(UI_PREFS.advisorName||'Advisor'))).trim();
+  }
+  var byId={};for(var bi=0;bi<templates.length;bi++)byId[templates[bi].id]=templates[bi];
+  document.querySelectorAll('[data-tpl-cat]').forEach(function(btn){btn.addEventListener('click',function(){templateView.category=this.dataset.tplCat||'all';rTemplates()})});
+  var si=document.getElementById('tplSearchInput');if(si)si.addEventListener('input',function(){templateView.query=this.value||'';rTemplates()});
+  var applyBtn=document.getElementById('tplApplyVars');if(applyBtn)applyBtn.addEventListener('click',function(){collectVars();rTemplates()});
+  var saveBtn=document.getElementById('tplSaveDefaults');if(saveBtn)saveBtn.addEventListener('click',function(){collectVars();UI_PREFS.defaultContactName=currentVars.first_name;UI_PREFS.defaultCompanyName=currentVars.company_name;UI_PREFS.templateSignature=currentVars.signature;saveUIPrefs();toast('Template defaults saved','success')});
+  document.querySelectorAll('[data-tpl-copy]').forEach(function(btn){btn.addEventListener('click',function(){collectVars();var tp=byId[this.dataset.tplCopy];if(!tp)return;var body=fillTemplate(tp,currentVars);navigator.clipboard.writeText(body).then(function(){toast('Template copied','success')}).catch(function(){toast('Clipboard blocked in this browser','warn')})})});
+  document.querySelectorAll('[data-tpl-copy-subject]').forEach(function(btn){btn.addEventListener('click',function(){collectVars();var tp=byId[this.dataset.tplCopySubject];if(!tp)return;var body=fillTemplate(tp,currentVars);var m=body.match(/^Subject:\\s*(.*)$/m);var subject=m?m[1]:'Follow-up';navigator.clipboard.writeText(subject).then(function(){toast('Subject line copied','success')}).catch(function(){toast('Clipboard blocked in this browser','warn')})})});
+  var copyAll=document.getElementById('tplCopyAll');if(copyAll)copyAll.addEventListener('click',function(){collectVars();if(!filtered.length)return;navigator.clipboard.writeText(fillTemplate(filtered[0],currentVars)).then(function(){toast('Lead preview copied','success')}).catch(function(){toast('Clipboard blocked in this browser','warn')})});
+  document.querySelectorAll('[data-tpl-use-news]').forEach(function(btn){btn.addEventListener('click',function(){go('news')})});
   var ab=document.getElementById('tplAnalyzeBtn');if(ab)ab.addEventListener('click',function(){go('analyze')});
   var pb=document.getElementById('tplPipeBtn');if(pb)pb.addEventListener('click',function(){go('pipe')});
+  var sb=document.getElementById('tplOpenSettings');if(sb)sb.addEventListener('click',function(){openSettings()});
 }
 // --- Geo Map ---
 // Precise SD County city coordinates
@@ -3813,16 +3891,22 @@ function openSettings(){
 
   var h='<div class="settings-card">';
   h+='<div class="settings-hdr"><div class="settings-title">Settings</div><button class="settings-close" id="settingsClose">&times;</button></div>';
+  h+='<div class="settings-modern-hero"><div style="font-size:13px;font-weight:700;color:var(--txh)">Tailor the workspace to how <i>you</i> work.</div><div style="font-size:11px;color:var(--tx2);margin-top:4px;line-height:1.5">These preferences personalize language, template defaults, and each tab experience so your day feels faster and more relevant.</div></div>';
 
   h+='<div class="settings-section"><div class="settings-section-title">Display</div>';
   h+='<div class="settings-row"><div class="settings-label">Dark Mode<small>Keyboard shortcut: D</small></div><label class="toggle-switch"><input type="checkbox" id="darkSwitch"'+(dark?' checked':'')+'><span class="toggle-track"></span><span class="toggle-knob"></span></label></div>';
   h+='</div>';
 
   h+='<div class="settings-section"><div class="settings-section-title">Advisor Workspace</div>';
-  h+='<div class="settings-text-row"><div class="settings-label">Advisor Name<small>Used in Today and templates</small></div><input type="text" id="uiAdvisorName" value="'+H(UI_PREFS.advisorName)+'" placeholder="Your name"></div>';
-  h+='<div class="settings-text-row"><div class="settings-label">Ideal Segment<small>Your target prospect definition</small></div><input type="text" id="uiIdealSegment" value="'+H(UI_PREFS.idealSegment)+'" placeholder="e.g. $5M-$50M plans with 50-300 participants"></div>';
+  h+='<div class="settings-text-row"><div class="settings-label">Your Name<small>Appears in Today + templates</small></div><input type="text" id="uiAdvisorName" value="'+H(UI_PREFS.advisorName)+'" placeholder="Your name"></div>';
+  h+='<div class="settings-text-row"><div class="settings-label">Your Title<small>Used in committee-facing templates</small></div><input type="text" id="uiAdvisorTitle" value="'+H(UI_PREFS.advisorTitle||'')+'" placeholder="Retirement Plan Advisor"></div>';
+  h+='<div class="settings-text-row"><div class="settings-label">Ideal Segment<small>How you describe your target sponsor profile</small></div><input type="text" id="uiIdealSegment" value="'+H(UI_PREFS.idealSegment)+'" placeholder="e.g. $5M-$50M plans with 50-300 participants"></div>';
   h+='<div class="settings-text-row"><div class="settings-label">Home Region<small>Used for contextual copy in news and overview</small></div><input type="text" id="uiHomeRegion" value="'+H(UI_PREFS.homeRegion)+'" placeholder="e.g. San Diego County"></div>';
+  h+='<div class="settings-grid"><div class="settings-card-mini"><h5>Template defaults</h5><p>Pre-fill names so copy is warm and client-ready.</p><div class="settings-text-row" style="padding-top:8px"><div class="settings-label">Default First Name</div><input type="text" id="uiDefaultContactName" value="'+H(UI_PREFS.defaultContactName||'')+'" placeholder="there"></div><div class="settings-text-row"><div class="settings-label">Default Company</div><input type="text" id="uiDefaultCompanyName" value="'+H(UI_PREFS.defaultCompanyName||'')+'" placeholder="your team"></div></div><div class="settings-card-mini"><h5>Communication style</h5><p>Tune language tone + length used by Template Studio.</p><div class="settings-text-row" style="padding-top:8px"><div class="settings-label">Tone</div><select id="uiOutreachTone" class="settings-select"><option value="warm"'+((UI_PREFS.outreachTone||'warm')==='warm'?' selected':'')+'>Warm + conversational</option><option value="executive"'+((UI_PREFS.outreachTone||'warm')==='executive'?' selected':'')+'>Executive concise</option><option value="consultative"'+((UI_PREFS.outreachTone||'warm')==='consultative'?' selected':'')+'>Consultative coach</option></select></div><div class="settings-text-row"><div class="settings-label">Length</div><select id="uiOutreachLength" class="settings-select"><option value="short"'+((UI_PREFS.outreachLength||'standard')==='short'?' selected':'')+'>Short</option><option value="standard"'+((UI_PREFS.outreachLength||'standard')==='standard'?' selected':'')+'>Standard</option><option value="detailed"'+((UI_PREFS.outreachLength||'standard')==='detailed'?' selected':'')+'>Detailed</option></select></div></div></div>';
+  h+='<div class="settings-text-row"><div class="settings-label">Default Signature<small>Used in template previews and copy actions</small></div><input type="text" id="uiTemplateSignature" value="'+H((UI_PREFS.templateSignature||'').replace(/\\n/g,' / '))+'" placeholder="Warmly, / {{advisor_name}}"></div>';
   h+='</div>';
+
+  h+='<div class="settings-section"><div class="settings-section-title">Tab Tailoring</div><div class="settings-grid"><div class="settings-card-mini"><h5>Today tab</h5><p>Control queue density and prospect list size.</p><div class="settings-text-row" style="padding-top:8px"><div class="settings-label">Max queue rows</div><input type="text" id="uiTodayQueueLimit" value="'+H(String(UI_PREFS.todayQueueLimit||8))+'"></div><div class="settings-text-row"><div class="settings-label">Max priority prospects</div><input type="text" id="uiTodayPriorityLimit" value="'+H(String(UI_PREFS.todayPriorityLimit||8))+'"></div></div><div class="settings-card-mini"><h5>News tab</h5><p>Set your default filter when News opens.</p><div class="settings-text-row" style="padding-top:8px"><div class="settings-label">Default category</div><select id="uiNewsDefaultFocus" class="settings-select"><option value="all"'+((UI_PREFS.newsDefaultFocus||'all')==='all'?' selected':'')+'>All</option><option value="regulatory"'+((UI_PREFS.newsDefaultFocus||'all')==='regulatory'?' selected':'')+'>Regulatory</option><option value="providers"'+((UI_PREFS.newsDefaultFocus||'all')==='providers'?' selected':'')+'>Providers</option><option value="markets"'+((UI_PREFS.newsDefaultFocus||'all')==='markets'?' selected':'')+'>Markets</option><option value="practice"'+((UI_PREFS.newsDefaultFocus||'all')==='practice'?' selected':'')+'>Practice</option></select></div><div class="settings-row"><div class="settings-label">Pressing only by default</div><label class="toggle-switch"><input type="checkbox" id="uiNewsUrgentDefault"'+(UI_PREFS.newsUrgentDefault?' checked':'')+'><span class="toggle-track"></span><span class="toggle-knob"></span></label></div></div><div class="settings-card-mini"><h5>Alerts tab</h5><p>Tune triage defaults and fee alert sensitivity.</p><div class="settings-text-row" style="padding-top:8px"><div class="settings-label">Default alert filter</div><select id="uiAlertsDefaultFilter" class="settings-select"><option value="open"'+((UI_PREFS.alertsDefaultFilter||'open')==='open'?' selected':'')+'>Open</option><option value="new"'+((UI_PREFS.alertsDefaultFilter||'open')==='new'?' selected':'')+'>New</option><option value="snoozed"'+((UI_PREFS.alertsDefaultFilter||'open')==='snoozed'?' selected':'')+'>Snoozed</option><option value="resolved"'+((UI_PREFS.alertsDefaultFilter||'open')==='resolved'?' selected':'')+'>Resolved</option><option value="all"'+((UI_PREFS.alertsDefaultFilter||'open')==='all'?' selected':'')+'>All</option></select></div><div class="settings-text-row"><div class="settings-label">Fee alert threshold (%)</div><input type="text" id="uiFeeAlertThreshold" value="'+H(String(UI_PREFS.feeAlertThreshold||1.35))+'" placeholder="1.35"></div></div><div class="settings-card-mini"><h5>Template tab</h5><p>Set defaults that auto-populate placeholders.</p><div class="settings-text-row" style="padding-top:8px"><div class="settings-label">Template signature shortcut</div><input type="text" id="uiTemplateSignature2" value="'+H((UI_PREFS.templateSignature||'').replace(/\\n/g,' / '))+'" placeholder="Warmly, / {{advisor_name}}"></div><div class="settings-text-row"><div class="settings-label">Template first-name fallback</div><input type="text" id="uiDefaultContactName2" value="'+H(UI_PREFS.defaultContactName||'')+'" placeholder="there"></div></div></div></div>';
 
   h+='<div class="settings-section"><div class="settings-section-title">Prospect Scoring</div>';
   h+='<div style="font-size:10px;color:var(--tx3);margin-bottom:12px;line-height:1.4">Customize how each factor contributes to the prospect score. Adjust weights and thresholds. Saved to your browser.</div>';
@@ -3870,8 +3954,24 @@ function openSettings(){
 
   document.getElementById('scoreApply').addEventListener('click',function(){
     UI_PREFS.advisorName=((document.getElementById('uiAdvisorName')||{}).value||'Advisor').trim()||'Advisor';
+    UI_PREFS.advisorTitle=((document.getElementById('uiAdvisorTitle')||{}).value||'Retirement Plan Advisor').trim()||'Retirement Plan Advisor';
     UI_PREFS.idealSegment=((document.getElementById('uiIdealSegment')||{}).value||'401(k) plans with fee + provider displacement potential').trim()||'401(k) plans with fee + provider displacement potential';
     UI_PREFS.homeRegion=((document.getElementById('uiHomeRegion')||{}).value||'San Diego County').trim()||'San Diego County';
+    UI_PREFS.defaultContactName=((document.getElementById('uiDefaultContactName')||{}).value||(document.getElementById('uiDefaultContactName2')||{}).value||'there').trim()||'there';
+    UI_PREFS.defaultCompanyName=((document.getElementById('uiDefaultCompanyName')||{}).value||'your team').trim()||'your team';
+    UI_PREFS.outreachTone=((document.getElementById('uiOutreachTone')||{}).value||'warm');
+    UI_PREFS.outreachLength=((document.getElementById('uiOutreachLength')||{}).value||'standard');
+    var sigRaw=((document.getElementById('uiTemplateSignature2')||{}).value||(document.getElementById('uiTemplateSignature')||{}).value||'Warmly, / {{advisor_name}}').trim();
+    UI_PREFS.templateSignature=(sigRaw||'Warmly, / {{advisor_name}}').replace(/\s*\/\s*/g,'\n');
+    UI_PREFS.todayQueueLimit=Math.min(15,Math.max(5,parseInt(((document.getElementById('uiTodayQueueLimit')||{}).value||'8'),10)||8));
+    UI_PREFS.todayPriorityLimit=Math.min(12,Math.max(4,parseInt(((document.getElementById('uiTodayPriorityLimit')||{}).value||'8'),10)||8));
+    UI_PREFS.newsDefaultFocus=((document.getElementById('uiNewsDefaultFocus')||{}).value||'all');
+    UI_PREFS.newsUrgentDefault=!!((document.getElementById('uiNewsUrgentDefault')||{}).checked);
+    UI_PREFS.alertsDefaultFilter=((document.getElementById('uiAlertsDefaultFilter')||{}).value||'open');
+    UI_PREFS.feeAlertThreshold=parseFloat(((document.getElementById('uiFeeAlertThreshold')||{}).value||'1.35'))||1.35;
+    newsView.focus=UI_PREFS.newsDefaultFocus;
+    newsView.urgentOnly=UI_PREFS.newsUrgentDefault;
+    alertsFilter=UI_PREFS.alertsDefaultFilter;
     saveUIPrefs();
     refreshWorkspaceChrome();
     sliderKeys.forEach(function(key){var inp=document.getElementById('sw_'+key);if(inp)SCORE_W[key]=parseInt(inp.value)});
