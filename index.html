@@ -1558,6 +1558,7 @@ newsView.focus=UI_PREFS.newsDefaultFocus||'all';
 newsView.urgentOnly=!!UI_PREFS.newsUrgentDefault;
 var alertsFilter=UI_PREFS.alertsDefaultFilter||'open';
 var alertsShowAll=false,alertsOnlyActionable=true,alertsShowDismissed=false;
+var ALERTS_DEFAULT_LIMIT=7,ALERTS_ABSOLUTE_LIMIT=30;
 var alertState=(function(){
   try{return JSON.parse(localStorage.getItem('mammini_alert_state')||'{}')||{}}catch(e){return {}}
 })();
@@ -2624,44 +2625,55 @@ function rNews(){
 }
 function buildAlerts(){
   var alerts=[];
-  var feeThresh=isFinite(UI_PREFS.feeAlertThreshold)?UI_PREFS.feeAlertThreshold:1.35;
+  var feeThresh=Math.max(isFinite(UI_PREFS.feeAlertThreshold)?UI_PREFS.feeAlertThreshold:1.35,1.75);
   for(var i=0;i<D.length;i++){
-    var p=D[i],ein=p[14],signals=[],urgency=0,impact=0;
+    var p=D[i],ein=p[14],signals=[],urgency=0,impact=0,confidence=0;
     var planPipe=pipeline[ein];
-    if((p[31]||0)>feeThresh){
+    if((p[31]||0)>(feeThresh+.2)&&(p[4]||0)>=2e6){
       var over=((p[31]||0)-feeThresh).toFixed(2);
-      signals.push({kind:'fee',reason:'Fee '+over+' pts above your threshold ('+p[31]+'%)',action:'Review fees + consider outreach'});
-      urgency+=p[31]>(feeThresh+.45)?4:2;
-      impact+=2;
+      signals.push({kind:'fee',reason:'Fee '+over+' pts above strict threshold ('+p[31]+'%)',action:'Review fee structure + outreach plan'});
+      urgency+=p[31]>(feeThresh+.5)?5:3;
+      impact+=3;
+      confidence+=2;
     }
-    if((p[6]||0)<-20){signals.push({kind:'growth',reason:'Assets down '+FM.p(p[6])+' year over year',action:'Open plan and assess sponsor context'});urgency+=4;impact+=2;}
-    if(!p[20]&&(p[12]||0)>=85){signals.push({kind:'noAdvisor',reason:'No advisor listed on latest filing',action:'Review + consider outreach'});urgency+=5;impact+=3;}
-    if(!p[13]){signals.push({kind:'filing',reason:'Latest filing link is missing',action:'Schedule follow-up for filing retrieval'});urgency+=1;impact+=1;}
+    if((p[6]||0)<=-35){signals.push({kind:'growth',reason:'Assets down '+FM.p(p[6])+' (extreme decline)',action:'Open plan and assess sponsor risk context'});urgency+=5;impact+=3;confidence+=2;}
+    if(!p[20]&&(p[12]||0)>=88&&(p[4]||0)>=1500000){signals.push({kind:'noAdvisor',reason:'No advisor listed on latest filing',action:'Review + consider targeted outreach'});urgency+=6;impact+=4;confidence+=2;}
+    if(!p[13]&&planPipe){signals.push({kind:'filing',reason:'Missing filing link on a tracked plan',action:'Schedule follow-up for filing retrieval'});urgency+=3;impact+=2;confidence+=1;}
+    if(((p[7]||0)<=4&&(p[4]||0)>=3e6)||((p[7]||0)>=2500&&!p[20])){signals.push({kind:'participation',reason:'Participant profile is an outlier for plan size',action:'Review participant engagement and governance context'});urgency+=3;impact+=3;confidence+=1;}
     if(planPipe&&planPipe.nextTouch){
       var due=dueBucketForDate(planPipe.nextTouch);
-      if(due.bucket==='overdue'){signals.push({kind:'touch',reason:'Pipeline follow-up is '+due.label,action:'Schedule follow-up now'});urgency+=5;impact+=2;}
+      if(due.bucket==='overdue'){signals.push({kind:'touch',reason:'Pipeline follow-up is '+due.label,action:'Schedule follow-up now'});urgency+=7;impact+=3;confidence+=2;}
     }
     if(!signals.length)continue;
-    signals.sort(function(a,b){return (b.action.indexOf('outreach')>=0?1:0)-(a.action.indexOf('outreach')>=0?1:0)});
-    var top=signals[0];
+    signals.sort(function(a,b){return (b.kind==='touch'?1:0)-(a.kind==='touch'?1:0)});
+    var top=signals[0],secondary=signals[1];
+    var shouldSuppress=(urgency<6&&impact<6)||signals.length===1&&top.kind==='filing'&&!planPipe;
+    if(shouldSuppress)continue;
     var severity=urgency>=8?'now':urgency>=4?'review':'background';
     var keyMetric=(p[4]||0)>=1e6?FM.usd(p[4]):('Score '+(p[12]||0));
+    var titleBits=[];
+    if(top.kind==='noAdvisor')titleBits.push('no advisor');
+    if(signals.some(function(s){return s.kind==='fee'}))titleBits.push('above-market fees');
+    if(signals.some(function(s){return s.kind==='growth'}))titleBits.push('sharp decline');
+    if(!titleBits.length)titleBits.push(top.kind);
     alerts.push({
       ein:ein,
       planName:p[0],
       metric:keyMetric,
-      reason:top.reason,
+      reason:top.reason+(secondary?(' + '+secondary.reason.toLowerCase()):''),
       nextAction:top.action,
       kind:top.kind,
       severity:severity,
       urgency:urgency,
       impact:impact+Math.min(4,Math.round((p[12]||0)/25)),
-      score:urgency*10+(impact*3)+Math.min(9,Math.round((p[12]||0)/12)),
+      confidence:Math.min(5,confidence+(p[13]?1:0)),
+      headline:FM.usd(p[4]||0)+' plan — '+titleBits.slice(0,2).join(' + '),
+      score:urgency*12+(impact*4)+Math.min(9,Math.round((p[12]||0)/12))+confidence*3,
       signals:signals
     });
   }
-  alerts.sort(function(a,b){return b.score-a.score||b.urgency-a.urgency||b.impact-a.impact});
-  return alerts;
+  alerts.sort(function(a,b){return b.urgency-a.urgency||b.impact-a.impact||b.confidence-a.confidence||b.score-a.score});
+  return alerts.slice(0,ALERTS_ABSOLUTE_LIMIT);
 }
 function rAlerts(){
   var el=document.getElementById('p-alerts');
@@ -2675,7 +2687,7 @@ function rAlerts(){
     tiers[al.severity].push(Object.assign({},al,{status:status}));
   }
   var allShown=[].concat(tiers.now,tiers.review,tiers.background);
-  var topStack=alertsShowAll?allShown:allShown.slice(0,7);
+  var topStack=(alertsShowAll?allShown:allShown.slice(0,ALERTS_DEFAULT_LIMIT)).slice(0,ALERTS_ABSOLUTE_LIMIT);
   var h='';
   h+='<div class="alerts-shell"><div class="alerts-hero"><div class="module-kicker">Personal assistant flow</div><div class="module-title">What needs attention now</div><div class="module-sub">Scan once, know what matters, and take action instantly.</div></div>';
   h+='<div class="alerts-toolbar"><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="alerts-pill'+(alertsOnlyActionable?' active':'')+'" id="alertsOnlyActionable">Only actionable</button><button class="alerts-pill'+(alertsShowDismissed?' active':'')+'" id="alertsShowDismissed">Show dismissed</button><button class="alerts-pill" id="alertsMarkAll">Mark all reviewed</button><button class="alerts-pill" id="alertsViewAll">'+(alertsShowAll?'Show top 7':'View all')+'</button></div><div style="font-family:Jost,sans-serif;font-size:10px;color:var(--tx3)">Unread '+unreadCt+' · 🔴 '+tiers.now.length+' · 🟡 '+tiers.review.length+' · ⚪ '+tiers.background.length+'</div></div>';
@@ -2685,7 +2697,7 @@ function rAlerts(){
     h+='<div class="alerts-stack">';
     for(var ai=0;ai<topStack.length;ai++){
       var a=topStack[ai],tierClass=a.severity==='now'?'now':a.severity==='review'?'review':'bg',tierLabel=a.severity==='now'?'🔴 Needs attention now':a.severity==='review'?'🟡 Worth reviewing':'⚪ Background';
-      h+='<div class="alert-card'+(a.status==='new'?' unread':'')+'"><div class="alert-head"><div><div class="alert-title">'+H(a.planName)+' — '+H(a.metric)+'</div><div class="alert-reason">→ '+H(a.reason)+'</div><div class="alert-action">→ <b>Action:</b> '+H(a.nextAction)+'</div></div><span class="alert-tier '+tierClass+'">'+tierLabel+'</span></div><div class="alert-actions"><button class="alert-btn" data-open-alert="'+H(a.ein)+'">View plan</button><button class="alert-btn" data-add-pipe="'+H(a.ein)+'">Add to pipeline</button><button class="alert-btn" data-sched-alert="'+H(a.ein)+'">Schedule follow-up</button><button class="alert-btn" data-mark-alert="'+H(a.ein)+'">Mark reviewed</button><button class="alert-btn" data-dismiss-alert="'+H(a.ein)+'">Dismiss</button></div></div>';
+      h+='<div class="alert-card'+(a.status==='new'?' unread':'')+'"><div class="alert-head"><div><div class="alert-title">'+H(a.headline||a.planName+' — '+a.metric)+'</div><div class="alert-reason">→ '+H(a.reason)+'</div><div class="alert-action">→ <b>Action:</b> '+H(a.nextAction)+'</div></div><span class="alert-tier '+tierClass+'">'+tierLabel+'</span></div><div class="alert-actions"><button class="alert-btn" data-open-alert="'+H(a.ein)+'">View plan</button><button class="alert-btn" data-add-pipe="'+H(a.ein)+'">Add to pipeline</button><button class="alert-btn" data-sched-alert="'+H(a.ein)+'">Schedule follow-up</button><button class="alert-btn" data-mark-alert="'+H(a.ein)+'">Mark reviewed</button><button class="alert-btn" data-dismiss-alert="'+H(a.ein)+'">Dismiss</button></div></div>';
     }
     h+='</div>';
   }
