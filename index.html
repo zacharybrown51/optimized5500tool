@@ -648,6 +648,28 @@ body.has-news-ticker .news-ticker{top:64px}
 .tpl-btn{padding:6px 9px;border-radius:8px;border:1px solid var(--brd);background:var(--bg3);font-family:Jost,sans-serif;font-size:9px;font-weight:600;color:var(--tx2);cursor:pointer}
 .tpl-btn:hover{border-color:rgba(17,138,169,.3);color:var(--acc2)}
 @media (max-width:980px){.tpl-grid{grid-template-columns:1fr}.tpl-input-grid{grid-template-columns:1fr}}
+.alerts-shell{padding:18px;display:flex;flex-direction:column;gap:12px}
+.alerts-hero{border:1px solid var(--brd);border-radius:16px;padding:16px 18px;background:linear-gradient(140deg,#132f45,#1f4f67 60%,#2a6b80);color:#eef7ff}
+.alerts-hero .module-title,.alerts-hero .module-sub,.alerts-hero .module-kicker{color:#eef7ff}
+.alerts-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px;border:1px solid var(--brd);border-radius:12px;background:rgba(255,255,255,.92)}
+.alerts-pill{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;border:1px solid var(--brd);background:var(--bg3);font-family:Jost,sans-serif;font-size:10px;font-weight:600;color:var(--tx2);cursor:pointer}
+.alerts-pill.active{background:rgba(17,138,169,.1);border-color:rgba(17,138,169,.3);color:var(--acc2)}
+.alerts-stack{display:flex;flex-direction:column;gap:10px}
+.alert-card{border:1px solid var(--brd);border-radius:12px;padding:12px;background:#fff;box-shadow:var(--shadow-sm)}
+.alert-card.unread{border-left:4px solid var(--coral)}
+.alert-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.alert-title{font-family:Jost,sans-serif;font-size:12px;font-weight:700;color:var(--txh)}
+.alert-reason,.alert-action{font-family:Jost,sans-serif;font-size:11px;line-height:1.5;color:var(--tx2);margin-top:6px}
+.alert-action b{color:var(--txh)}
+.alert-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.alert-btn{padding:6px 9px;border-radius:8px;border:1px solid var(--brd);background:var(--bg3);font-family:Jost,sans-serif;font-size:9px;font-weight:600;color:var(--tx2);cursor:pointer}
+.alert-btn:hover{border-color:rgba(17,138,169,.3);color:var(--acc2)}
+.alert-tier{font-family:IBM Plex Mono,monospace;font-size:9px;padding:3px 7px;border-radius:999px;border:1px solid var(--brd);background:var(--bg3)}
+.alert-tier.now{border-color:rgba(255,122,89,.35);background:rgba(255,122,89,.09);color:var(--coral)}
+.alert-tier.review{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.09);color:#b7791f}
+.alert-tier.bg{border-color:rgba(148,163,184,.35);background:rgba(148,163,184,.08);color:#64748b}
+.alert-empty{border:1px dashed var(--brd);border-radius:12px;padding:16px;background:rgba(17,138,169,.03);font-family:Jost,sans-serif;font-size:11px;color:var(--tx2)}
+@media (max-width:900px){.alerts-toolbar{align-items:flex-start}}
 
 /* Settings overlay */
 .settings-ov{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);z-index:6000;display:none;align-items:center;justify-content:center}
@@ -661,6 +683,12 @@ body.dark .settings-card{background:#1a2a3a}
 .settings-card-mini p{margin:0;font-size:10px;color:var(--tx3);line-height:1.45}
 .settings-select{width:100%;padding:7px 9px;border:1px solid var(--brd);border-radius:8px;background:var(--bg3);font-family:Jost,sans-serif;font-size:12px;color:var(--tx)}
 @media (max-width:900px){.settings-grid{grid-template-columns:1fr}}
+.settings-acc{border:1px solid var(--brd);border-radius:12px;background:rgba(255,255,255,.85);margin-bottom:12px;overflow:hidden}
+.settings-acc summary{list-style:none;cursor:pointer;padding:11px 13px;font-family:Jost,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--tx2);font-weight:700;display:flex;align-items:center;justify-content:space-between;background:rgba(17,138,169,.04)}
+.settings-acc summary::-webkit-details-marker{display:none}
+.settings-acc summary:after{content:'▾';font-size:11px;color:var(--tx3)}
+.settings-acc:not([open]) summary:after{content:'▸'}
+.settings-acc-body{padding:12px 13px}
 .score-slider{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--brd)}
 .score-slider:last-child{border-bottom:none}
 .score-slider-label{flex:1;font-size:11px;color:var(--tx2)}
@@ -1529,6 +1557,7 @@ var pipeline={},pipelineFilter='all',pipelineSearch='',draggedPipelineEin='';
 newsView.focus=UI_PREFS.newsDefaultFocus||'all';
 newsView.urgentOnly=!!UI_PREFS.newsUrgentDefault;
 var alertsFilter=UI_PREFS.alertsDefaultFilter||'open';
+var alertsShowAll=false,alertsOnlyActionable=true,alertsShowDismissed=false;
 var alertState=(function(){
   try{return JSON.parse(localStorage.getItem('mammini_alert_state')||'{}')||{}}catch(e){return {}}
 })();
@@ -1540,6 +1569,12 @@ function getAlertStatus(alert){
 function setAlertStatus(alert,status){
   var k=alertKey(alert);
   alertState[k]={status:status,updatedAt:Date.now()};
+  try{localStorage.setItem('mammini_alert_state',JSON.stringify(alertState))}catch(e){}
+}
+function mergeAlertState(alert,patch){
+  var k=alertKey(alert);
+  var cur=alertState[k]||{};
+  alertState[k]=Object.assign({},cur,patch,{updatedAt:Date.now()});
   try{localStorage.setItem('mammini_alert_state',JSON.stringify(alertState))}catch(e){}
 }
 var PIPELINE_STAGES=[{id:'new',label:'New'},{id:'qualified',label:'Qualified'},{id:'priority',label:'Priority'},{id:'contacted',label:'Contacted'},{id:'meeting',label:'Meeting'},{id:'closed',label:'Closed / Lost'}];
@@ -2591,56 +2626,80 @@ function buildAlerts(){
   var alerts=[];
   var feeThresh=isFinite(UI_PREFS.feeAlertThreshold)?UI_PREFS.feeAlertThreshold:1.35;
   for(var i=0;i<D.length;i++){
-    var p=D[i],sev='Medium';
-    if((p[31]||0)>feeThresh){sev=(p[31]>(feeThresh+.45)?'High':'Medium');alerts.push({severity:sev,type:'Fee displacement',label:'Fee ratio above peer band',detail:p[0]+' · '+p[31]+'% expense ratio',ein:p[14]});}
-    if((p[6]||0)<-20){alerts.push({severity:'High',type:'Growth deterioration',label:'Sharp asset decline',detail:p[0]+' · '+FM.p(p[6])+' YoY growth',ein:p[14]});}
-    if(!p[13]){alerts.push({severity:'Medium',type:'Data quality',label:'Missing filing URL',detail:p[0]+' · needs filing retrieval',ein:p[14]});}
-    if(!p[20]&&(p[12]||0)>=85){alerts.push({severity:'High',type:'No-advisor opportunity',label:'High-score plan without advisor',detail:p[0]+' · score '+p[12],ein:p[14]});}
+    var p=D[i],ein=p[14],signals=[],urgency=0,impact=0;
+    var planPipe=pipeline[ein];
+    if((p[31]||0)>feeThresh){
+      var over=((p[31]||0)-feeThresh).toFixed(2);
+      signals.push({kind:'fee',reason:'Fee '+over+' pts above your threshold ('+p[31]+'%)',action:'Review fees + consider outreach'});
+      urgency+=p[31]>(feeThresh+.45)?4:2;
+      impact+=2;
+    }
+    if((p[6]||0)<-20){signals.push({kind:'growth',reason:'Assets down '+FM.p(p[6])+' year over year',action:'Open plan and assess sponsor context'});urgency+=4;impact+=2;}
+    if(!p[20]&&(p[12]||0)>=85){signals.push({kind:'noAdvisor',reason:'No advisor listed on latest filing',action:'Review + consider outreach'});urgency+=5;impact+=3;}
+    if(!p[13]){signals.push({kind:'filing',reason:'Latest filing link is missing',action:'Schedule follow-up for filing retrieval'});urgency+=1;impact+=1;}
+    if(planPipe&&planPipe.nextTouch){
+      var due=dueBucketForDate(planPipe.nextTouch);
+      if(due.bucket==='overdue'){signals.push({kind:'touch',reason:'Pipeline follow-up is '+due.label,action:'Schedule follow-up now'});urgency+=5;impact+=2;}
+    }
+    if(!signals.length)continue;
+    signals.sort(function(a,b){return (b.action.indexOf('outreach')>=0?1:0)-(a.action.indexOf('outreach')>=0?1:0)});
+    var top=signals[0];
+    var severity=urgency>=8?'now':urgency>=4?'review':'background';
+    var keyMetric=(p[4]||0)>=1e6?FM.usd(p[4]):('Score '+(p[12]||0));
+    alerts.push({
+      ein:ein,
+      planName:p[0],
+      metric:keyMetric,
+      reason:top.reason,
+      nextAction:top.action,
+      kind:top.kind,
+      severity:severity,
+      urgency:urgency,
+      impact:impact+Math.min(4,Math.round((p[12]||0)/25)),
+      score:urgency*10+(impact*3)+Math.min(9,Math.round((p[12]||0)/12)),
+      signals:signals
+    });
   }
-  return alerts.slice(0,80);
+  alerts.sort(function(a,b){return b.score-a.score||b.urgency-a.urgency||b.impact-a.impact});
+  return alerts;
 }
 function rAlerts(){
   var el=document.getElementById('p-alerts');
   var alerts=buildAlerts();
-  var counts={new:0,snoozed:0,resolved:0};
-  var sevCounts={High:0,Medium:0,Low:0};
-  var typeCounts={};
+  var tiers={now:[],review:[],background:[]},unreadCt=0;
   for(var i=0;i<alerts.length;i++){
-    var st=getAlertStatus(alerts[i]);
-    if(counts[st]!=null)counts[st]++;
-    sevCounts[alerts[i].severity]=(sevCounts[alerts[i].severity]||0)+1;
-    typeCounts[alerts[i].type]=(typeCounts[alerts[i].type]||0)+1;
+    var al=alerts[i],state=alertState[alertKey(al)]||{},status=state.status||'new';
+    if(status==='dismissed'&&!alertsShowDismissed)continue;
+    if(alertsOnlyActionable&&(status==='reviewed'||status==='dismissed'))continue;
+    if(status==='new')unreadCt++;
+    tiers[al.severity].push(Object.assign({},al,{status:status}));
   }
-  var shown=alerts.filter(function(a){
-    var st=getAlertStatus(a);
-    if(alertsFilter==='all')return true;
-    if(alertsFilter==='open')return st!=='resolved';
-    return st===alertsFilter;
-  });
+  var allShown=[].concat(tiers.now,tiers.review,tiers.background);
+  var topStack=alertsShowAll?allShown:allShown.slice(0,7);
   var h='';
-  h+='<div class="module-shell"><div class="module-hero"><div class="module-kicker">Signal monitor</div><div class="module-title">Alerts triage</div><div class="module-sub">Triage queue for fee displacement, growth deterioration, filing reliability, and no-advisor opportunities. Resolve fast and route important work into Today.</div></div>';
-  h+='<div class="module-grid"><div class="module-card"><h4>Triage filters</h4><div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 10px"><button class="pipe-pill'+(alertsFilter==='open'?' active':'')+'" data-af="open">Open <span class="ct">'+(counts.new+counts.snoozed)+'</span></button><button class="pipe-pill'+(alertsFilter==='new'?' active':'')+'" data-af="new">New <span class="ct">'+counts.new+'</span></button><button class="pipe-pill'+(alertsFilter==='snoozed'?' active':'')+'" data-af="snoozed">Snoozed <span class="ct">'+counts.snoozed+'</span></button><button class="pipe-pill'+(alertsFilter==='resolved'?' active':'')+'" data-af="resolved">Resolved <span class="ct">'+counts.resolved+'</span></button><button class="pipe-pill'+(alertsFilter==='all'?' active':'')+'" data-af="all">All <span class="ct">'+alerts.length+'</span></button></div><p>Use snooze for non-urgent alerts and resolve once outreach or remediation is complete.</p></div>';
-  h+='<div class="module-card"><h4>Severity mix</h4><div class="module-row"><div><strong>High</strong><span>Immediate advisor review</span></div><span>'+FM.n(sevCounts.High||0)+'</span></div><div class="module-row"><div><strong>Medium</strong><span>Review this week</span></div><span>'+FM.n(sevCounts.Medium||0)+'</span></div><div class="module-row"><div><strong>Low</strong><span>Monitor trend</span></div><span>'+FM.n(sevCounts.Low||0)+'</span></div></div></div>';
-
-  h+='<div class="module-grid"><div class="module-card"><h4>Alert taxonomy</h4>';
-  var types=Object.keys(typeCounts).sort(function(a,b){return typeCounts[b]-typeCounts[a]});
-  if(!types.length)h+='<p>No generated alerts.</p>';
-  for(var t=0;t<types.length;t++){var tp=types[t];h+='<div class="module-row"><div><strong>'+H(tp)+'</strong><span>Rule-generated</span></div><span>'+FM.n(typeCounts[tp])+'</span></div>'}
-  h+='</div><div class="module-card"><h4>Active triage queue</h4>';
-  if(!shown.length)h+='<p>No alerts in this state right now.</p>';
-  for(var si=0;si<Math.min(shown.length,30);si++){
-    var al=shown[si],status=getAlertStatus(al),statusColor=status==='resolved'?'var(--teal)':status==='snoozed'?'var(--tx3)':'var(--coral)',sevColor=al.severity==='High'?'var(--coral)':(al.severity==='Medium'?'var(--amb2)':'var(--acc2)');
-    h+='<div class="module-row"><div><strong>'+H(al.label)+'</strong><span>'+H(al.type)+' · '+H(al.detail)+' · <b style="color:'+statusColor+'">'+status.toUpperCase()+'</b></span></div><div style="display:flex;gap:4px;flex-wrap:wrap"><button class="btn" data-open-alert="'+H(al.ein)+'" style="font-size:9px;padding:6px 10px;border-color:'+sevColor+';color:'+sevColor+'">OPEN</button><button class="btn" data-alert-state="snoozed" data-alert-ein="'+H(al.ein)+'" data-alert-label="'+H(al.label)+'" data-alert-sev="'+H(al.severity)+'" style="font-size:9px;padding:6px 10px">SNOOZE</button><button class="btn" data-alert-state="resolved" data-alert-ein="'+H(al.ein)+'" data-alert-label="'+H(al.label)+'" data-alert-sev="'+H(al.severity)+'" style="font-size:9px;padding:6px 10px">RESOLVE</button><button class="btn" data-alert-state="new" data-alert-ein="'+H(al.ein)+'" data-alert-label="'+H(al.label)+'" data-alert-sev="'+H(al.severity)+'" style="font-size:9px;padding:6px 10px">RESET</button></div></div>';
+  h+='<div class="alerts-shell"><div class="alerts-hero"><div class="module-kicker">Personal assistant flow</div><div class="module-title">What needs attention now</div><div class="module-sub">Scan once, know what matters, and take action instantly.</div></div>';
+  h+='<div class="alerts-toolbar"><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="alerts-pill'+(alertsOnlyActionable?' active':'')+'" id="alertsOnlyActionable">Only actionable</button><button class="alerts-pill'+(alertsShowDismissed?' active':'')+'" id="alertsShowDismissed">Show dismissed</button><button class="alerts-pill" id="alertsMarkAll">Mark all reviewed</button><button class="alerts-pill" id="alertsViewAll">'+(alertsShowAll?'Show top 7':'View all')+'</button></div><div style="font-family:Jost,sans-serif;font-size:10px;color:var(--tx3)">Unread '+unreadCt+' · 🔴 '+tiers.now.length+' · 🟡 '+tiers.review.length+' · ⚪ '+tiers.background.length+'</div></div>';
+  if(!topStack.length){
+    h+='<div class="alert-empty"><strong>Nothing needs attention right now.</strong><br><span style="color:var(--tx3)">Passive insight: '+(alerts.length?('You have '+alerts.length+' low-priority background signals available when you toggle “Only actionable” off.'):('No meaningful signals crossed your thresholds today.'))+'</span></div>';
+  }else{
+    h+='<div class="alerts-stack">';
+    for(var ai=0;ai<topStack.length;ai++){
+      var a=topStack[ai],tierClass=a.severity==='now'?'now':a.severity==='review'?'review':'bg',tierLabel=a.severity==='now'?'🔴 Needs attention now':a.severity==='review'?'🟡 Worth reviewing':'⚪ Background';
+      h+='<div class="alert-card'+(a.status==='new'?' unread':'')+'"><div class="alert-head"><div><div class="alert-title">'+H(a.planName)+' — '+H(a.metric)+'</div><div class="alert-reason">→ '+H(a.reason)+'</div><div class="alert-action">→ <b>Action:</b> '+H(a.nextAction)+'</div></div><span class="alert-tier '+tierClass+'">'+tierLabel+'</span></div><div class="alert-actions"><button class="alert-btn" data-open-alert="'+H(a.ein)+'">View plan</button><button class="alert-btn" data-add-pipe="'+H(a.ein)+'">Add to pipeline</button><button class="alert-btn" data-sched-alert="'+H(a.ein)+'">Schedule follow-up</button><button class="alert-btn" data-mark-alert="'+H(a.ein)+'">Mark reviewed</button><button class="alert-btn" data-dismiss-alert="'+H(a.ein)+'">Dismiss</button></div></div>';
+    }
+    h+='</div>';
   }
-  h+='</div></div></div>';
+  h+='</div>';
   el.innerHTML=h;
-  document.querySelectorAll('[data-af]').forEach(function(btn){btn.addEventListener('click',function(){alertsFilter=this.dataset.af||'open';rAlerts()})});
-  document.querySelectorAll('[data-alert-state]').forEach(function(btn){btn.addEventListener('click',function(){
-    var alert={ein:this.dataset.alertEin||'',label:this.dataset.alertLabel||'',severity:this.dataset.alertSev||''};
-    setAlertStatus(alert,this.dataset.alertState||'new');
-    rAlerts();
-  })});
+  var onlyBtn=document.getElementById('alertsOnlyActionable');if(onlyBtn)onlyBtn.addEventListener('click',function(){alertsOnlyActionable=!alertsOnlyActionable;rAlerts()});
+  var disBtn=document.getElementById('alertsShowDismissed');if(disBtn)disBtn.addEventListener('click',function(){alertsShowDismissed=!alertsShowDismissed;rAlerts()});
+  var allBtn=document.getElementById('alertsViewAll');if(allBtn)allBtn.addEventListener('click',function(){alertsShowAll=!alertsShowAll;rAlerts()});
+  var markAll=document.getElementById('alertsMarkAll');if(markAll)markAll.addEventListener('click',function(){for(var i=0;i<topStack.length;i++)mergeAlertState(topStack[i],{status:'reviewed'});toast('Marked visible alerts as reviewed','success');rAlerts()});
   document.querySelectorAll('[data-open-alert]').forEach(function(btn){btn.addEventListener('click',function(){var plan=getPlanByEin(this.dataset.openAlert);if(plan){go('tbl');oD(D.indexOf(plan),D)}})});
+  document.querySelectorAll('[data-add-pipe]').forEach(function(btn){btn.addEventListener('click',function(){var plan=getPlanByEin(this.dataset.addPipe);if(!plan)return;ensurePipeline(plan,'new');toast('Added to pipeline','success');rAlerts()})});
+  document.querySelectorAll('[data-sched-alert]').forEach(function(btn){btn.addEventListener('click',function(){var ein=this.dataset.schedAlert||'';var item=pipeline[ein];var d=prompt('Set follow-up date (YYYY-MM-DD):',item&&item.nextTouch?item.nextTouch:'');if(!d)return;var plan=getPlanByEin(ein);if(plan&&!item)item=ensurePipeline(plan,'contacted');if(item){item.nextTouch=d;item.updatedAt=Date.now();savePipeline({silent:true});toast('Follow-up scheduled','success')}var al=null;for(var i=0;i<alerts.length;i++){if(alerts[i].ein===ein){al=alerts[i];break}}if(al)mergeAlertState(al,{status:'reviewed'});rAlerts()})});
+  document.querySelectorAll('[data-mark-alert]').forEach(function(btn){btn.addEventListener('click',function(){var ein=this.dataset.markAlert||'';var al=null;for(var i=0;i<alerts.length;i++){if(alerts[i].ein===ein){al=alerts[i];break}}if(!al)return;mergeAlertState(al,{status:'reviewed'});rAlerts()})});
+  document.querySelectorAll('[data-dismiss-alert]').forEach(function(btn){btn.addEventListener('click',function(){var ein=this.dataset.dismissAlert||'';var al=null;for(var i=0;i<alerts.length;i++){if(alerts[i].ein===ein){al=alerts[i];break}}if(!al)return;mergeAlertState(al,{status:'dismissed'});rAlerts()})});
 }
 function rTemplates(){
   var el=document.getElementById('p-templates');
@@ -4004,6 +4063,21 @@ function openSettings(){
 
   ov.innerHTML=h;
   document.body.appendChild(ov);
+  var secList=ov.querySelectorAll('.settings-section');
+  secList.forEach(function(sec,idx){
+    var titleEl=sec.querySelector('.settings-section-title');
+    if(!titleEl)return;
+    var acc=document.createElement('details');
+    acc.className='settings-acc';
+    if(idx<2)acc.open=true;
+    var sm=document.createElement('summary');
+    sm.textContent=titleEl.textContent;
+    var body=document.createElement('div');
+    body.className='settings-acc-body';
+    Array.from(sec.children).forEach(function(ch){if(ch!==titleEl)body.appendChild(ch)});
+    acc.appendChild(sm);acc.appendChild(body);
+    sec.parentNode.replaceChild(acc,sec);
+  });
 
   document.getElementById('settingsClose').addEventListener('click',function(){document.body.removeChild(ov)});
   document.getElementById('darkSwitch').addEventListener('change',function(){toggleDark(this.checked)});
