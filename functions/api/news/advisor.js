@@ -140,7 +140,7 @@ export async function onRequestGet(context) {
 
     var marketauxKey = context.env && context.env.MARKETAUX_API_KEY ? String(context.env.MARKETAUX_API_KEY) : '';
     var finnhubKey = context.env && context.env.FINNHUB_API_KEY ? String(context.env.FINNHUB_API_KEY) : '';
-    var search = '401k retirement fiduciary ERISA';
+    var search = 'retirement plan sponsor advisor workplace benefits';
 
     var settled = await Promise.all([
       fetchMarketaux(marketauxKey, search, 20).then(function (items) { return { ok: true, name: 'marketaux', items: items }; }).catch(function (err) { return { ok: false, name: 'marketaux', error: err.message || 'failed', items: [] }; }),

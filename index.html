@@ -1374,7 +1374,7 @@ async function fetchNews(opts){
   var seg=encodeURIComponent(UI_PREFS.idealSegment||'401(k)');
   var endpoints={
     advisor:'/api/news/advisor?region='+region+'&segment='+seg+'&limit=40&_t='+Date.now(),
-    relevant:'/api/news/relevant?region='+region+'&q=401k+retirement+fiduciary&limit=40&_t='+Date.now(),
+    relevant:'/api/news/relevant?region='+region+'&q=retirement+plan+sponsor+workplace+benefits+advisor&limit=40&_t='+Date.now(),
     fallback:'/api/news?_t='+Date.now()
   };
   latestNewsByFeed={advisor:[],relevant:[],fallback:[]};
@@ -2822,9 +2822,13 @@ function rNews(){
   });
   var pressing=filtered.filter(function(i){return i.isPressing}).slice(0,6);
   var lead=filtered[0]||null;
-  var advisorFeed=filtered.filter(function(i){return i.feed==='advisor'}).slice(0,8);
-  var relevantFeed=filtered.filter(function(i){return i.feed==='relevant'}).slice(0,8);
-  var fallbackFeed=filtered.filter(function(i){return i.feed==='fallback'}).slice(0,8);
+  // Keep per-feed sections visible even when global filters are narrow.
+  // Feed panels intentionally use unfiltered feed lists.
+  var advisorFeed=all.filter(function(i){return i.feed==='advisor'}).slice(0,8);
+  var relevantFeed=all.filter(function(i){return i.feed==='relevant'}).slice(0,8);
+  var fallbackFeed=all.filter(function(i){return i.feed==='fallback'}).slice(0,8);
+  if(!advisorFeed.length&&all.length)advisorFeed=all.slice(0,6);
+  if(!relevantFeed.length&&all.length)relevantFeed=all.slice(0,6);
   function fmtAgo(item){
     var h=hoursAgoFrom(item.publishedAt);
     if(h>=9999)return 'Date unavailable';
@@ -2858,10 +2862,10 @@ function rNews(){
   for(var p=0;p<pressing.length;p++){var pi=pressing[p];h+='<div class="news-headline"><div class="news-headline-title">'+H(pi.title)+'</div><div class="news-meta">'+H(pi.source)+' · '+fmtAgo(pi)+' · '+pi.category+'</div><div class="news-actions"><a class="news-mini" href="'+H(pi.link||'#')+'" target="_blank" rel="noopener">OPEN</a><button class="news-mini" data-news-brief="'+H(pi.id)+'">COPY BRIEF</button><button class="news-mini" data-news-to-alerts="1">SEND TO ALERTS</button></div></div>'}
   h+='</div></div>';
   h+='<div class="news-grid"><div class="news-card"><h4>Advisor API feed</h4>';
-  if(!advisorFeed.length)h+='<p style="font-family:Jost,sans-serif;font-size:11px;color:var(--tx2)">No advisor-feed stories for current filters.</p>';
+  if(!advisorFeed.length)h+='<p style="font-family:Jost,sans-serif;font-size:11px;color:var(--tx2)">No advisor-feed stories available yet.</p>';
   for(var af=0;af<advisorFeed.length;af++){var ai=advisorFeed[af];h+='<div class="news-headline"><div class="news-headline-title">'+H(ai.title)+'</div><div class="news-meta">'+H(ai.source)+' · '+fmtAgo(ai)+' · '+ai.category+'</div><div class="news-actions"><a class="news-mini" href="'+H(ai.link||'#')+'" target="_blank" rel="noopener">OPEN</a><button class="news-mini" data-news-brief="'+H(ai.id)+'">COPY BRIEF</button></div></div>'}
   h+='</div><div class="news-card"><h4>Relevant API feed</h4>';
-  if(!relevantFeed.length)h+='<p style="font-family:Jost,sans-serif;font-size:11px;color:var(--tx2)">No relevant-feed stories for current filters.</p>';
+  if(!relevantFeed.length)h+='<p style="font-family:Jost,sans-serif;font-size:11px;color:var(--tx2)">No relevant-feed stories available yet.</p>';
   for(var rf=0;rf<relevantFeed.length;rf++){var ri=relevantFeed[rf];h+='<div class="news-headline"><div class="news-headline-title">'+H(ri.title)+'</div><div class="news-meta">'+H(ri.source)+' · '+fmtAgo(ri)+' · '+ri.category+'</div><div class="news-actions"><a class="news-mini" href="'+H(ri.link||'#')+'" target="_blank" rel="noopener">OPEN</a><button class="news-mini" data-news-brief="'+H(ri.id)+'">COPY BRIEF</button></div></div>'}
   if(fallbackFeed.length){
     h+='<div style="margin-top:10px;font-family:Jost,sans-serif;font-size:10px;color:var(--tx3)">Fallback feed active ('+FM.n(fallbackFeed.length)+' items).</div>';

@@ -139,7 +139,7 @@ export async function onRequestGet(context) {
     limit = Math.min(limit, 100);
 
     var q = (url.searchParams.get('q') || '').trim();
-    var search = q || '401k retirement fiduciary ERISA';
+    var search = q || 'retirement plan sponsor advisor workplace benefits';
 
     var marketauxKey = context.env && context.env.MARKETAUX_API_KEY ? String(context.env.MARKETAUX_API_KEY) : '';
     var finnhubKey = context.env && context.env.FINNHUB_API_KEY ? String(context.env.FINNHUB_API_KEY) : '';
