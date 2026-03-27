@@ -70,6 +70,18 @@ body.hm-lock .app{height:calc(100dvh - 64px);min-height:calc(100dvh - 64px)}
 .market-inline.na .market-inline-price,.market-inline.na .market-inline-change{color:#8aa0b1}
 @media (max-width:1180px){.hdr-context .hdr-stat:nth-child(3){display:none}.market-live-text{display:none}}
 @media (max-width:980px){.hdr{height:auto;min-height:64px;padding:8px 12px;align-items:flex-start}.hdr-left,.hdr-right{width:100%}.hdr-right{justify-content:space-between;flex-wrap:wrap}.market-strip{order:2;width:100%}}
+
+/* Interaction system */
+.btn,.today-btn,.news-mini,.tpl-btn,.alert-btn,.alerts-pill,.pipe-mini-btn,.pipe-pill,.tab,.side-toggle,.news-pill,.tpl-cat-btn{transition:background-color .14s ease,color .14s ease,border-color .14s ease,transform .12s ease,box-shadow .12s ease}
+.btn:active,.today-btn:active,.news-mini:active,.tpl-btn:active,.alert-btn:active,.alerts-pill:active,.pipe-mini-btn:active,.pipe-pill:active,.tab:active,.side-toggle:active,.news-pill:active,.tpl-cat-btn:active{transform:translateY(1px)}
+.btn:focus-visible,.today-btn:focus-visible,.news-mini:focus-visible,.tpl-btn:focus-visible,.alert-btn:focus-visible,.alerts-pill:focus-visible,.pipe-mini-btn:focus-visible,.pipe-pill:focus-visible,.tab:focus-visible,.news-pill:focus-visible,.tpl-cat-btn:focus-visible,.side-toggle:focus-visible{outline:2px solid rgba(26,141,255,.45);outline-offset:2px}
+.is-busy{pointer-events:none;opacity:.72;filter:saturate(.9)}
+.is-busy:after{content:'';display:inline-block;width:10px;height:10px;margin-left:6px;border:1.5px solid currentColor;border-right-color:transparent;border-radius:50%;vertical-align:-1px;animation:spin .65s linear infinite}
+.was-clicked{box-shadow:0 0 0 2px rgba(17,138,169,.16) inset}
+.pipe-card[data-ein],#tbd tr[data-idx],.tpl-template[data-tpl-select]{cursor:pointer}
+#tbd tr[data-idx]{transition:background-color .12s ease}
+#tbd tr[data-idx]:hover{background:rgba(17,138,169,.05)}
+#tbd tr.sel{box-shadow:inset 2px 0 0 var(--acc2)}
 .content-shell{flex:1;overflow:auto}
 .main{flex:1;overflow:visible;display:block}.panel{display:none;overflow:visible}.panel.active{display:block}
 .hero{display:flex;gap:14px;border-bottom:1px solid transparent;padding:16px 18px 8px;background:linear-gradient(180deg,rgba(255,255,255,.42),rgba(255,255,255,0))}
@@ -790,6 +802,20 @@ body:not(.dark) .kbd{background:var(--bg4);border-color:var(--brd);color:var(--t
 <div class="snap-ov" id="snap"></div>
 <script>
 function H(s){if(typeof s!=='string')return s;return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function setBusy(el,busy){
+  if(!el)return;
+  el.classList.toggle('is-busy',!!busy);
+  if(busy)el.setAttribute('aria-busy','true');else el.removeAttribute('aria-busy');
+}
+function pulseClick(el){
+  if(!el)return;
+  el.classList.add('was-clicked');
+  setTimeout(function(){el.classList.remove('was-clicked')},180);
+}
+document.addEventListener('click',function(e){
+  var hit=e.target.closest('.btn,.today-btn,.news-mini,.tpl-btn,.alert-btn,.alerts-pill,.pipe-mini-btn,.pipe-pill,.tab,.news-pill,.tpl-cat-btn,.side-toggle');
+  if(hit)pulseClick(hit);
+});
 
 function normalizeDolUrl(url){
 if(!url)return'';
@@ -2733,7 +2759,7 @@ function rToday(){
   document.querySelectorAll('[data-today-add]').forEach(function(btn){btn.addEventListener('click',function(){var plan=getPlanByEin(this.dataset.todayAdd);if(!plan)return;ensurePipeline(plan,'new');toast('Added to pipeline','success');rToday()})});
   document.querySelectorAll('[data-today-open]').forEach(function(btn){btn.addEventListener('click',function(){var ein=this.dataset.todayOpen||'';if(!ein)return;var plan=getPlanByEin(ein);if(plan){go('tbl');oD(D.indexOf(plan),D)}})});
   document.querySelectorAll('[data-today-pipe]').forEach(function(btn){btn.addEventListener('click',function(){var ein=this.dataset.todayPipe||'';if(ein){var plan=getPlanByEin(ein);if(plan)ensurePipeline(plan,'qualified')}go('pipe')})});
-  document.querySelectorAll('[data-today-follow]').forEach(function(btn){btn.addEventListener('click',function(){var ein=this.dataset.todayFollow||'';if(!ein){go('pipe');return}var item=pipelineIndex[ein],plan=getPlanByEin(ein);if(plan&&!item)item=ensurePipeline(plan,'contacted');if(!item)return;var d=prompt('Set follow-up date (YYYY-MM-DD):',item.nextTouch||'');if(!d)return;item.nextTouch=d;item.updatedAt=Date.now();savePipeline({silent:true});toast('Follow-up scheduled','success');rToday()})});
+  document.querySelectorAll('[data-today-follow]').forEach(function(btn){btn.addEventListener('click',function(){var ein=this.dataset.todayFollow||'';if(!ein){go('pipe');return}var item=pipelineIndex[ein],plan=getPlanByEin(ein);if(plan&&!item)item=ensurePipeline(plan,'contacted');if(!item)return;var d=prompt('Set follow-up date (YYYY-MM-DD):',item.nextTouch||'');if(!d)return;if(!/^\d{4}-\d{2}-\d{2}$/.test(d)){toast('Use YYYY-MM-DD format for follow-up date','warn');return}item.nextTouch=d;item.updatedAt=Date.now();savePipeline({silent:true});toast('Follow-up scheduled','success');rToday()})});
   document.querySelectorAll('[data-today-stage]').forEach(function(btn){btn.addEventListener('click',function(){var ein=this.dataset.todayStage||'';var item=pipelineIndex[ein];if(!item)return;var idx=0;for(var i=0;i<PIPELINE_STAGES.length;i++){if(PIPELINE_STAGES[i].id===item.stage){idx=i;break}}var next=PIPELINE_STAGES[Math.min(idx+1,PIPELINE_STAGES.length-1)];setPipelineStage(ein,next.id);toast('Moved to '+next.label,'success');rToday()})});
   document.querySelectorAll('[data-today-log]').forEach(function(btn){btn.addEventListener('click',function(){var ein=this.dataset.todayLog||'';if(!ein)return;var note=prompt('Log activity note:','Call / email update');if(!note)return;var acts=[];try{acts=JSON.parse(localStorage.getItem('act_'+ein)||'[]')||[]}catch(e){acts=[]}acts.unshift({ts:Date.now(),txt:note});localStorage.setItem('act_'+ein,JSON.stringify(acts.slice(0,40)));if(pipeline[ein]){pipeline[ein].updatedAt=Date.now();savePipeline({silent:true})}toast('Activity logged','success');rToday()})});
   for(var s=0;s<Math.min(12,D.length);s++){
@@ -2749,6 +2775,10 @@ function rToday(){
 }
 function rNews(){
   var el=document.getElementById('p-news');
+  if(newsFeedMeta.status==='loading'&&!latestNewsItems.length){
+    el.innerHTML='<div class="news-shell"><div class="news-hero"><div class="module-kicker">Advisor intelligence</div><div class="module-title">Newsroom</div><div class="module-sub">Refreshing relevant stories…</div></div><div class="news-card"><h4>Loading updates</h4><div class="news-headline" style="height:54px;opacity:.7"></div><div class="news-headline" style="height:54px;opacity:.5"></div><div class="news-headline" style="height:54px;opacity:.35"></div></div></div>';
+    return;
+  }
   if(!latestNewsItems.length&&newsFeedMeta.status!=='loading')fetchNews({force:true});
   var all=(latestNewsItems||[]).slice().map(function(item){
     var copy=Object.assign({},item||{});
@@ -2802,7 +2832,7 @@ function rNews(){
   h+='</div></div>';
   el.innerHTML=h;
   var byId={};for(var b=0;b<all.length;b++)byId[all[b].id]=all[b];
-  var rb=document.getElementById('newsRefreshBtn');if(rb)rb.addEventListener('click',function(){newsFeedMeta.status='loading';rNews();fetchNews({force:true});toast('Refreshing advisor news','info')});
+  var rb=document.getElementById('newsRefreshBtn');if(rb)rb.addEventListener('click',function(){if(newsFeedMeta.status==='loading'){toast('News refresh already in progress','info');return}setBusy(rb,true);newsFeedMeta.status='loading';rNews();fetchNews({force:true}).catch(function(){toast('Could not refresh news feed. Please try again.','warn')}).finally(function(){setBusy(rb,false)});toast('Refreshing advisor news','info')});
   var si=document.getElementById('newsSearchInput');if(si)si.addEventListener('input',function(){newsView.query=this.value||'';rNews()});
   document.querySelectorAll('[data-news-focus]').forEach(function(btn){btn.addEventListener('click',function(){newsView.focus=this.dataset.newsFocus||'all';rNews()})});
   var ub=document.getElementById('newsUrgentToggle');if(ub)ub.addEventListener('click',function(){newsView.urgentOnly=!newsView.urgentOnly;rNews()});
@@ -2897,7 +2927,7 @@ function rAlerts(){
   var markAll=document.getElementById('alertsMarkAll');if(markAll)markAll.addEventListener('click',function(){for(var i=0;i<topStack.length;i++)mergeAlertState(topStack[i],{status:'reviewed'});toast('Marked visible alerts as reviewed','success');rAlerts()});
   document.querySelectorAll('[data-open-alert]').forEach(function(btn){btn.addEventListener('click',function(){var plan=getPlanByEin(this.dataset.openAlert);if(plan){go('tbl');oD(D.indexOf(plan),D)}})});
   document.querySelectorAll('[data-add-pipe]').forEach(function(btn){btn.addEventListener('click',function(){var plan=getPlanByEin(this.dataset.addPipe);if(!plan)return;ensurePipeline(plan,'new');toast('Added to pipeline','success');rAlerts()})});
-  document.querySelectorAll('[data-sched-alert]').forEach(function(btn){btn.addEventListener('click',function(){var ein=this.dataset.schedAlert||'';var item=pipeline[ein];var d=prompt('Set follow-up date (YYYY-MM-DD):',item&&item.nextTouch?item.nextTouch:'');if(!d)return;var plan=getPlanByEin(ein);if(plan&&!item)item=ensurePipeline(plan,'contacted');if(item){item.nextTouch=d;item.updatedAt=Date.now();savePipeline({silent:true});toast('Follow-up scheduled','success')}var al=null;for(var i=0;i<alerts.length;i++){if(alerts[i].ein===ein){al=alerts[i];break}}if(al)mergeAlertState(al,{status:'reviewed'});rAlerts()})});
+  document.querySelectorAll('[data-sched-alert]').forEach(function(btn){btn.addEventListener('click',function(){var ein=this.dataset.schedAlert||'';var item=pipeline[ein];var d=prompt('Set follow-up date (YYYY-MM-DD):',item&&item.nextTouch?item.nextTouch:'');if(!d)return;if(!/^\d{4}-\d{2}-\d{2}$/.test(d)){toast('Use YYYY-MM-DD format for follow-up date','warn');return}var plan=getPlanByEin(ein);if(plan&&!item)item=ensurePipeline(plan,'contacted');if(item){item.nextTouch=d;item.updatedAt=Date.now();savePipeline({silent:true});toast('Follow-up scheduled','success')}var al=null;for(var i=0;i<alerts.length;i++){if(alerts[i].ein===ein){al=alerts[i];break}}if(al)mergeAlertState(al,{status:'reviewed'});rAlerts()})});
   document.querySelectorAll('[data-mark-alert]').forEach(function(btn){btn.addEventListener('click',function(){var ein=this.dataset.markAlert||'';var al=null;for(var i=0;i<alerts.length;i++){if(alerts[i].ein===ein){al=alerts[i];break}}if(!al)return;mergeAlertState(al,{status:'reviewed'});rAlerts()})});
   document.querySelectorAll('[data-dismiss-alert]').forEach(function(btn){btn.addEventListener('click',function(){var ein=this.dataset.dismissAlert||'';var al=null;for(var i=0;i<alerts.length;i++){if(alerts[i].ein===ein){al=alerts[i];break}}if(!al)return;mergeAlertState(al,{status:'dismissed'});rAlerts()})});
 }
