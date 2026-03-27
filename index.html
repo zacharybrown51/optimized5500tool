@@ -1316,7 +1316,8 @@ function renderMarketStrip(quotes){
 }
 
 var latestNewsItems=[];
-var newsFeedMeta={status:'idle',updatedAt:0,endpoint:'',error:''};
+var latestNewsByFeed={advisor:[],relevant:[],fallback:[]};
+var newsFeedMeta={status:'idle',updatedAt:0,endpoint:'',error:'',feeds:{advisor:{ok:false,count:0,error:''},relevant:{ok:false,count:0,error:''},fallback:{ok:false,count:0,error:''}}};
 var newsView={focus:'all',query:'',urgentOnly:false};
 var templateView={category:'all',query:'',vars:null};
 function normalizeNewsItem(raw){
@@ -1330,7 +1331,8 @@ function normalizeNewsItem(raw){
     link:raw.link||raw.url||'#',
     publishedAt:published,
     region:raw.region||'',
-    topics:Array.isArray(raw.topics)?raw.topics:[]
+    topics:Array.isArray(raw.topics)?raw.topics:[],
+    feed:raw.feed||'combined'
   };
 }
 function hoursAgoFrom(isoDate){
@@ -1367,30 +1369,53 @@ async function fetchNews(opts){
   var force=!!opts.force;
   newsFeedMeta.status='loading';
   newsFeedMeta.error='';
+  newsFeedMeta.feeds={advisor:{ok:false,count:0,error:''},relevant:{ok:false,count:0,error:''},fallback:{ok:false,count:0,error:''}};
   var region=encodeURIComponent(UI_PREFS.homeRegion||'San Diego County');
   var seg=encodeURIComponent(UI_PREFS.idealSegment||'401(k)');
-  var endpoints=[
-    '/api/news/advisor?region='+region+'&segment='+seg+'&limit=40&_t='+Date.now(),
-    '/api/news/relevant?region='+region+'&q=401k+retirement+fiduciary&limit=40&_t='+Date.now(),
-    '/api/news?_t='+Date.now()
-  ];
-  for(var i=0;i<endpoints.length;i++){
+  var endpoints={
+    advisor:'/api/news/advisor?region='+region+'&segment='+seg+'&limit=40&_t='+Date.now(),
+    relevant:'/api/news/relevant?region='+region+'&q=401k+retirement+fiduciary&limit=40&_t='+Date.now(),
+    fallback:'/api/news?_t='+Date.now()
+  };
+  latestNewsByFeed={advisor:[],relevant:[],fallback:[]};
+  var combined=[];
+  async function pull(feed){
     try{
-      var res=await fetch(endpoints[i],{cache:'no-store'});
-      if(!res.ok)continue;
+      var res=await fetch(endpoints[feed],{cache:'no-store'});
+      if(!res.ok){
+        newsFeedMeta.feeds[feed].error='HTTP '+res.status;
+        return;
+      }
       var data=await res.json();
       var rows=(data&&data.items)||[];
-      if(!rows.length)continue;
-      latestNewsItems=rows.map(normalizeNewsItem).slice(0,40);
-      newsFeedMeta.status='ready';
-      newsFeedMeta.updatedAt=Date.now();
-      newsFeedMeta.endpoint=endpoints[i];
-      if(force&&ct==='news')rNews();
-      return latestNewsItems;
-    }catch(e){}
+      latestNewsByFeed[feed]=rows.map(function(row){
+        var mapped=normalizeNewsItem(row);
+        mapped.feed=feed;
+        return mapped;
+      }).slice(0,40);
+      newsFeedMeta.feeds[feed].ok=rows.length>0;
+      newsFeedMeta.feeds[feed].count=rows.length;
+      if(feed!=='fallback')combined=combined.concat(latestNewsByFeed[feed]);
+    }catch(e){
+      newsFeedMeta.feeds[feed].error=(e&&e.message)?e.message:'request failed';
+    }
   }
+  await Promise.all([pull('advisor'),pull('relevant')]);
+  if(!combined.length){
+    await pull('fallback');
+    combined=latestNewsByFeed.fallback.slice();
+  }
+  if(combined.length){
+    latestNewsItems=combined.slice(0,40);
+    newsFeedMeta.status='ready';
+    newsFeedMeta.updatedAt=Date.now();
+    newsFeedMeta.endpoint=combined[0]&&combined[0].feed?('multi:'+Object.keys(latestNewsByFeed).filter(function(k){return latestNewsByFeed[k].length}).join(',')):'pending';
+    if(force&&ct==='news')rNews();
+    return latestNewsItems;
+  }
+  latestNewsItems=[];
   newsFeedMeta.status='error';
-  newsFeedMeta.error='Unable to reach news endpoints';
+  newsFeedMeta.error='Unable to reach advisor/relevant news endpoints';
   if(force&&ct==='news')rNews();
   return [];
 }
@@ -2797,6 +2822,9 @@ function rNews(){
   });
   var pressing=filtered.filter(function(i){return i.isPressing}).slice(0,6);
   var lead=filtered[0]||null;
+  var advisorFeed=filtered.filter(function(i){return i.feed==='advisor'}).slice(0,8);
+  var relevantFeed=filtered.filter(function(i){return i.feed==='relevant'}).slice(0,8);
+  var fallbackFeed=filtered.filter(function(i){return i.feed==='fallback'}).slice(0,8);
   function fmtAgo(item){
     var h=hoursAgoFrom(item.publishedAt);
     if(h>=9999)return 'Date unavailable';
@@ -2810,8 +2838,15 @@ function rNews(){
   }
   var categoryCounts={all:all.length,regulatory:0,providers:0,markets:0,practice:0};
   for(var i=0;i<all.length;i++){categoryCounts[all[i].category]=(categoryCounts[all[i].category]||0)+1}
+  var feedCounts={advisor:(latestNewsByFeed.advisor||[]).length,relevant:(latestNewsByFeed.relevant||[]).length,fallback:(latestNewsByFeed.fallback||[]).length};
+  function feedLine(feed,label){
+    var meta=(newsFeedMeta.feeds&&newsFeedMeta.feeds[feed])||{ok:false,count:0,error:''};
+    var txt=label+': '+FM.n(meta.count||0)+' stories';
+    if(meta.error)txt+=' ('+meta.error+')';
+    return txt;
+  }
   var h='';
-  h+='<div class="news-shell"><div class="news-hero"><button class="news-refresh-btn'+(newsFeedMeta.status==='loading'?' is-loading':'')+'" id="newsRefreshBtn" title="Refresh feed" aria-label="Refresh feed"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A7.95 7.95 0 0012 4V1L7 6l5 5V7a5 5 0 11-4.9 6h-2.02A7 7 0 1017.65 6.35z"/></svg></button><div class="module-kicker">Advisor intelligence</div><div class="module-title">Newsroom</div><div class="module-sub">Relevant retirement-plan updates for '+H(UI_PREFS.homeRegion)+', ranked by urgency and advisor impact so you can decide quickly.</div><div class="news-meta" style="color:rgba(232,244,255,.86);margin-top:8px">Source endpoint: '+H(newsFeedMeta.endpoint||'pending')+' · Updated '+(newsFeedMeta.updatedAt?new Date(newsFeedMeta.updatedAt).toLocaleTimeString(): 'not yet')+'</div></div>';
+  h+='<div class="news-shell"><div class="news-hero"><button class="news-refresh-btn'+(newsFeedMeta.status==='loading'?' is-loading':'')+'" id="newsRefreshBtn" title="Refresh feed" aria-label="Refresh feed"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A7.95 7.95 0 0012 4V1L7 6l5 5V7a5 5 0 11-4.9 6h-2.02A7 7 0 1017.65 6.35z"/></svg></button><div class="module-kicker">Advisor intelligence</div><div class="module-title">Newsroom</div><div class="module-sub">Relevant retirement-plan updates for '+H(UI_PREFS.homeRegion)+', ranked by urgency and advisor impact so you can decide quickly.</div><div class="news-meta" style="color:rgba(232,244,255,.86);margin-top:8px">Integrated feeds · '+H(feedLine('advisor','Advisor API'))+' · '+H(feedLine('relevant','Relevant API'))+(feedCounts.fallback?' · '+H(feedLine('fallback','Fallback API')):'')+' · Updated '+(newsFeedMeta.updatedAt?new Date(newsFeedMeta.updatedAt).toLocaleTimeString(): 'not yet')+'</div></div>';
   h+='<div class="news-controls"><div class="news-pill-row"><button class="news-pill'+(newsView.focus==='all'?' active':'')+'" data-news-focus="all">All <span class="ct">'+FM.n(categoryCounts.all)+'</span></button><button class="news-pill'+(newsView.focus==='regulatory'?' active':'')+'" data-news-focus="regulatory">Regulatory <span class="ct">'+FM.n(categoryCounts.regulatory)+'</span></button><button class="news-pill'+(newsView.focus==='providers'?' active':'')+'" data-news-focus="providers">Providers <span class="ct">'+FM.n(categoryCounts.providers)+'</span></button><button class="news-pill'+(newsView.focus==='markets'?' active':'')+'" data-news-focus="markets">Markets <span class="ct">'+FM.n(categoryCounts.markets)+'</span></button><button class="news-pill'+(newsView.focus==='practice'?' active':'')+'" data-news-focus="practice">Practice <span class="ct">'+FM.n(categoryCounts.practice)+'</span></button><button class="news-pill'+(newsView.urgentOnly?' active':'')+'" id="newsUrgentToggle">Pressing only</button></div><input class="news-search" id="newsSearchInput" placeholder="Search headlines, sources, topics..." value="'+H(newsView.query||'')+'"></div>';
   h+='<div class="news-grid"><div class="news-card"><h4>Lead story</h4>';
   if(!lead)h+='<p style="font-family:Jost,sans-serif;font-size:11px;color:var(--tx2)">No matching stories for your current filters.</p>';
@@ -2821,6 +2856,16 @@ function rNews(){
   h+='</div><div class="news-card"><h4>Pressing now</h4>';
   if(!pressing.length)h+='<p style="font-family:Jost,sans-serif;font-size:11px;color:var(--tx2)">No pressing items right now.</p>';
   for(var p=0;p<pressing.length;p++){var pi=pressing[p];h+='<div class="news-headline"><div class="news-headline-title">'+H(pi.title)+'</div><div class="news-meta">'+H(pi.source)+' · '+fmtAgo(pi)+' · '+pi.category+'</div><div class="news-actions"><a class="news-mini" href="'+H(pi.link||'#')+'" target="_blank" rel="noopener">OPEN</a><button class="news-mini" data-news-brief="'+H(pi.id)+'">COPY BRIEF</button><button class="news-mini" data-news-to-alerts="1">SEND TO ALERTS</button></div></div>'}
+  h+='</div></div>';
+  h+='<div class="news-grid"><div class="news-card"><h4>Advisor API feed</h4>';
+  if(!advisorFeed.length)h+='<p style="font-family:Jost,sans-serif;font-size:11px;color:var(--tx2)">No advisor-feed stories for current filters.</p>';
+  for(var af=0;af<advisorFeed.length;af++){var ai=advisorFeed[af];h+='<div class="news-headline"><div class="news-headline-title">'+H(ai.title)+'</div><div class="news-meta">'+H(ai.source)+' · '+fmtAgo(ai)+' · '+ai.category+'</div><div class="news-actions"><a class="news-mini" href="'+H(ai.link||'#')+'" target="_blank" rel="noopener">OPEN</a><button class="news-mini" data-news-brief="'+H(ai.id)+'">COPY BRIEF</button></div></div>'}
+  h+='</div><div class="news-card"><h4>Relevant API feed</h4>';
+  if(!relevantFeed.length)h+='<p style="font-family:Jost,sans-serif;font-size:11px;color:var(--tx2)">No relevant-feed stories for current filters.</p>';
+  for(var rf=0;rf<relevantFeed.length;rf++){var ri=relevantFeed[rf];h+='<div class="news-headline"><div class="news-headline-title">'+H(ri.title)+'</div><div class="news-meta">'+H(ri.source)+' · '+fmtAgo(ri)+' · '+ri.category+'</div><div class="news-actions"><a class="news-mini" href="'+H(ri.link||'#')+'" target="_blank" rel="noopener">OPEN</a><button class="news-mini" data-news-brief="'+H(ri.id)+'">COPY BRIEF</button></div></div>'}
+  if(fallbackFeed.length){
+    h+='<div style="margin-top:10px;font-family:Jost,sans-serif;font-size:10px;color:var(--tx3)">Fallback feed active ('+FM.n(fallbackFeed.length)+' items).</div>';
+  }
   h+='</div></div>';
   h+='<div class="news-card"><h4>Action queue</h4>';
   if(newsFeedMeta.status==='error')h+='<p style="font-family:Jost,sans-serif;font-size:11px;color:var(--coral)">Feed unavailable. Suggested new API endpoints: <code>/api/news/advisor</code> and <code>/api/news/relevant</code> returning {items:[title,summary,source,link,publishedAt,topics]}.</p>';
