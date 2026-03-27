@@ -602,6 +602,33 @@ body.has-news-ticker .news-ticker{top:64px}
 .module-row strong{font-family:Jost,sans-serif;font-size:11px;color:var(--txh)}
 .module-row span{font-family:Jost,sans-serif;font-size:10px;color:var(--tx3)}
 @media (max-width:950px){.module-grid{grid-template-columns:1fr}}
+.news-shell{padding:20px 18px 22px;display:flex;flex-direction:column;gap:14px;background:linear-gradient(180deg,rgba(247,251,255,.75),rgba(239,246,252,.68))}
+.news-hero{position:relative;border:1px solid rgba(18,51,74,.13);border-radius:20px;padding:18px 20px 16px;background:radial-gradient(circle at top right,rgba(17,138,169,.16),transparent 45%),linear-gradient(145deg,#0d2e45 0%,#174664 55%,#1f5670 100%);color:#e8f4ff;box-shadow:0 20px 38px rgba(8,26,42,.25)}
+.news-hero .module-kicker{color:#9dd8f0}
+.news-hero .module-title{color:#fff}
+.news-hero .module-sub{color:rgba(232,244,255,.9);max-width:72ch}
+.news-refresh-btn{position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:999px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.12);color:#fff;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .16s ease}
+.news-refresh-btn:hover{background:rgba(255,255,255,.22);transform:translateY(-1px)}
+.news-refresh-btn.is-loading svg{animation:spin .8s linear infinite}
+.news-refresh-btn svg{width:15px;height:15px;fill:currentColor}
+.news-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}
+.news-pill-row{display:flex;flex-wrap:wrap;gap:8px}
+.news-pill{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;border:1px solid var(--brd);background:rgba(255,255,255,.9);font-family:Jost,sans-serif;font-size:10px;color:var(--tx2);font-weight:600;cursor:pointer}
+.news-pill.active{border-color:rgba(17,138,169,.3);background:rgba(17,138,169,.1);color:var(--acc2)}
+.news-search{width:260px;max-width:100%;padding:8px 10px;border:1px solid var(--brd);border-radius:10px;background:rgba(255,255,255,.92);font-family:Jost,sans-serif;font-size:12px;color:var(--tx)}
+.news-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(320px,.7fr);gap:12px}
+.news-card{border:1px solid var(--brd);border-radius:14px;padding:13px;background:rgba(255,255,255,.92);box-shadow:var(--shadow-sm)}
+.news-card h4{margin:0 0 8px;font-family:Jost,sans-serif;font-size:12px;color:var(--txh)}
+.news-headline{padding:11px;border:1px solid var(--brd);border-radius:10px;background:rgba(17,138,169,.04);margin-top:8px}
+.news-headline-top{display:flex;justify-content:space-between;gap:8px}
+.news-headline-title{font-family:Jost,sans-serif;font-size:12px;line-height:1.42;color:var(--txh);font-weight:700}
+.news-meta{font-family:Jost,sans-serif;font-size:10px;color:var(--tx3);margin-top:5px}
+.news-tag{display:inline-flex;align-items:center;padding:3px 7px;border-radius:999px;border:1px solid rgba(17,138,169,.2);background:rgba(17,138,169,.08);font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--acc2)}
+.news-tag.hot{border-color:rgba(255,122,89,.35);background:rgba(255,122,89,.08);color:var(--coral)}
+.news-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.news-mini{padding:5px 8px;border-radius:8px;border:1px solid var(--brd);background:var(--bg3);font-family:Jost,sans-serif;font-size:9px;font-weight:600;color:var(--tx2);cursor:pointer}
+.news-mini:hover{border-color:rgba(17,138,169,.3);color:var(--acc2)}
+@media (max-width:980px){.news-grid{grid-template-columns:1fr}.news-controls{grid-template-columns:1fr}.news-search{width:100%}}
 
 /* Settings overlay */
 .settings-ov{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.4);z-index:6000;display:none;align-items:center;justify-content:center}
@@ -1171,12 +1198,82 @@ function renderMarketStrip(quotes){
 }
 
 var latestNewsItems=[];
+var newsFeedMeta={status:'idle',updatedAt:0,endpoint:'',error:''};
+var newsView={focus:'all',query:'',urgentOnly:false};
+function normalizeNewsItem(raw){
+  raw=raw||{};
+  var published=raw.publishedAt||raw.pubDate||raw.date||raw.published_at||'';
+  return {
+    id:raw.id||raw.guid||raw.link||raw.url||('news_'+Math.random().toString(36).slice(2)),
+    title:raw.title||'Untitled',
+    summary:raw.summary||raw.description||raw.snippet||'',
+    source:raw.source||raw.publisher||raw.outlet||'Unknown source',
+    link:raw.link||raw.url||'#',
+    publishedAt:published,
+    region:raw.region||'',
+    topics:Array.isArray(raw.topics)?raw.topics:[]
+  };
+}
+function hoursAgoFrom(isoDate){
+  var d=new Date(isoDate||'');
+  if(isNaN(d.getTime()))return 9999;
+  return Math.max(0,Math.round((Date.now()-d.getTime())/36e5));
+}
+function newsCategory(item){
+  var txt=((item.title||'')+' '+(item.summary||'')+' '+(item.source||'')+' '+(item.topics||[]).join(' ')).toLowerCase();
+  if(/dol|irs|sec|fiduciary|lawsuit|litigation|rule|regulat/.test(txt))return 'regulatory';
+  if(/recordkeeper|provider|fidelity|empower|principal|vanguard|fee/.test(txt))return 'providers';
+  if(/inflation|rate|fed|equity|bond|recession|volatility|market/.test(txt))return 'markets';
+  return 'practice';
+}
+function scoreNewsItem(item){
+  var txt=((item.title||'')+' '+(item.summary||'')).toLowerCase();
+  var score=20;
+  if(/retirement|401\\(k\\)|403\\(b\\)|defined contribution|plan sponsor/.test(txt))score+=25;
+  if(/fiduciary|fee|litigation|lawsuit|dol|irs|sec|enforcement|cyber/.test(txt))score+=18;
+  if(/recordkeeper|advisor|consultant|provider/.test(txt))score+=10;
+  var h=hoursAgoFrom(item.publishedAt);
+  if(h<=6)score+=12;else if(h<=24)score+=7;else if(h<=72)score+=3;
+  if((item.source||'').toLowerCase().indexOf('press release')>=0)score-=5;
+  return score;
+}
+function isPressingNews(item){
+  var txt=((item.title||'')+' '+(item.summary||'')).toLowerCase();
+  var urgentHit=/lawsuit|enforcement|investigation|breach|fiduciary|rule|final rule|settlement|market selloff|cyber/.test(txt);
+  return urgentHit||scoreNewsItem(item)>=55;
+}
 // --- News Ticker ---
-function fetchNews(){
-  fetch('/api/news?_t='+Date.now()).then(function(r){return r.json()}).then(function(data){
-    if(!data.ok||!data.items||!data.items.length)return;
-    latestNewsItems=data.items.slice(0,12);
-  }).catch(function(){/* silent fail — news is non-critical */});
+async function fetchNews(opts){
+  opts=opts||{};
+  var force=!!opts.force;
+  newsFeedMeta.status='loading';
+  newsFeedMeta.error='';
+  var region=encodeURIComponent(UI_PREFS.homeRegion||'San Diego County');
+  var seg=encodeURIComponent(UI_PREFS.idealSegment||'401(k)');
+  var endpoints=[
+    '/api/news/advisor?region='+region+'&segment='+seg+'&limit=40&_t='+Date.now(),
+    '/api/news/relevant?region='+region+'&q=401k+retirement+fiduciary&limit=40&_t='+Date.now(),
+    '/api/news?_t='+Date.now()
+  ];
+  for(var i=0;i<endpoints.length;i++){
+    try{
+      var res=await fetch(endpoints[i],{cache:'no-store'});
+      if(!res.ok)continue;
+      var data=await res.json();
+      var rows=(data&&data.items)||[];
+      if(!rows.length)continue;
+      latestNewsItems=rows.map(normalizeNewsItem).slice(0,40);
+      newsFeedMeta.status='ready';
+      newsFeedMeta.updatedAt=Date.now();
+      newsFeedMeta.endpoint=endpoints[i];
+      if(force&&ct==='news')rNews();
+      return latestNewsItems;
+    }catch(e){}
+  }
+  newsFeedMeta.status='error';
+  newsFeedMeta.error='Unable to reach news endpoints';
+  if(force&&ct==='news')rNews();
+  return [];
 }
 setTimeout(fetchNews,2000);// fetch news 2s after load
 setInterval(fetchNews,600000);// refresh every 10min
@@ -2370,56 +2467,67 @@ function rToday(){
 }
 function rNews(){
   var el=document.getElementById('p-news');
-  var stories=(latestNewsItems||[]).slice(0,12);
-  var categories={Regulatory:[],Providers:[],Markets:[],Practice:[]};
-  function classify(item){
+  if(!latestNewsItems.length&&newsFeedMeta.status!=='loading')fetchNews({force:true});
+  var all=(latestNewsItems||[]).slice().map(function(item){
+    var copy=Object.assign({},item||{});
+    copy.category=newsCategory(copy);
+    copy.score=scoreNewsItem(copy);
+    copy.isPressing=isPressingNews(copy);
+    return copy;
+  }).sort(function(a,b){return b.score-a.score});
+  var q=(newsView.query||'').toLowerCase().trim();
+  var filtered=all.filter(function(item){
+    if(newsView.focus!=='all'&&item.category!==newsView.focus)return false;
+    if(newsView.urgentOnly&&!item.isPressing)return false;
+    if(!q)return true;
     var txt=((item.title||'')+' '+(item.summary||'')+' '+(item.source||'')).toLowerCase();
-    if(/sec|dol|irs|rule|fiduciary|litigation|lawsuit/.test(txt))return 'Regulatory';
-    if(/fidelity|empower|principal|vanguard|recordkeeper|advisor|fee/.test(txt))return 'Providers';
-    if(/inflation|rate|fed|equity|bond|market/.test(txt))return 'Markets';
-    return 'Practice';
+    return txt.indexOf(q)>=0;
+  });
+  var pressing=filtered.filter(function(i){return i.isPressing}).slice(0,6);
+  var lead=filtered[0]||null;
+  function fmtAgo(item){
+    var h=hoursAgoFrom(item.publishedAt);
+    if(h>=9999)return 'Date unavailable';
+    if(h<1)return 'Just now';
+    if(h<24)return h+'h ago';
+    return Math.round(h/24)+'d ago';
   }
-  for(var i=0;i<stories.length;i++){categories[classify(stories[i])].push(stories[i]);}
-  var lead=stories.length?stories[0]:null;
+  function buildBrief(item){
+    var summary=item.summary||'No summary provided.';
+    return 'Story: '+item.title+'\\nCategory: '+item.category+'\\nWhy this matters: '+summary+'\\nAdvisor action: tie this update to fees, governance, or participant outcomes in your next sponsor touchpoint.';
+  }
+  var categoryCounts={all:all.length,regulatory:0,providers:0,markets:0,practice:0};
+  for(var i=0;i<all.length;i++){categoryCounts[all[i].category]=(categoryCounts[all[i].category]||0)+1}
   var h='';
-  h+='<div class="module-shell"><div class="module-hero"><div class="module-kicker">Market & retirement intelligence</div><div class="module-title">Newsroom</div><div class="module-sub">Curated for '+H(UI_PREFS.homeRegion)+' advisors. Each story is grouped by relevance so you can turn headlines into client outreach angles quickly.</div></div>';
-  h+='<div class="module-grid"><div class="module-card"><h4>Feed controls</h4><div class="module-row"><strong>Refresh latest feed</strong><button class="btn" id="newsRefreshBtn" style="font-size:9px;padding:6px 10px">REFRESH</button></div><div class="module-row"><strong>Open prospects table</strong><button class="btn" id="newsOpenProspects" style="font-size:9px;padding:6px 10px">GO</button></div><p style="margin-top:8px">Loaded '+FM.n(stories.length)+' stories from <code>/api/news</code>.</p></div>';
-  h+='<div class="module-card"><h4>Category mix</h4>';
-  var catNames=['Regulatory','Providers','Markets','Practice'];
-  for(var c=0;c<catNames.length;c++){var nm=catNames[c];h+='<div class="module-row"><div><strong>'+nm+'</strong><span>Stories in this stream</span></div><span>'+FM.n(categories[nm].length)+'</span></div>'}
-  h+='</div></div>';
-
-  h+='<div class="module-grid"><div class="module-card"><h4>Top story</h4>';
-  if(!lead)h+='<p>No cached headlines yet. Click refresh to load live items.</p>';
+  h+='<div class="news-shell"><div class="news-hero"><button class="news-refresh-btn'+(newsFeedMeta.status==='loading'?' is-loading':'')+'" id="newsRefreshBtn" title="Refresh feed" aria-label="Refresh feed"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A7.95 7.95 0 0012 4V1L7 6l5 5V7a5 5 0 11-4.9 6h-2.02A7 7 0 1017.65 6.35z"/></svg></button><div class="module-kicker">Advisor intelligence center</div><div class="module-title">Newsroom</div><div class="module-sub">Prioritized retirement-plan coverage for '+H(UI_PREFS.homeRegion)+'. Feed is ranked by urgency + advisor relevance, then grouped so every action button has a clear purpose.</div><div class="news-meta" style="color:rgba(232,244,255,.86);margin-top:8px">Source endpoint: '+H(newsFeedMeta.endpoint||'pending')+' · Updated '+(newsFeedMeta.updatedAt?new Date(newsFeedMeta.updatedAt).toLocaleTimeString(): 'not yet')+'</div></div>';
+  h+='<div class="news-controls"><div class="news-pill-row"><button class="news-pill'+(newsView.focus==='all'?' active':'')+'" data-news-focus="all">All <span class="ct">'+FM.n(categoryCounts.all)+'</span></button><button class="news-pill'+(newsView.focus==='regulatory'?' active':'')+'" data-news-focus="regulatory">Regulatory <span class="ct">'+FM.n(categoryCounts.regulatory)+'</span></button><button class="news-pill'+(newsView.focus==='providers'?' active':'')+'" data-news-focus="providers">Providers <span class="ct">'+FM.n(categoryCounts.providers)+'</span></button><button class="news-pill'+(newsView.focus==='markets'?' active':'')+'" data-news-focus="markets">Markets <span class="ct">'+FM.n(categoryCounts.markets)+'</span></button><button class="news-pill'+(newsView.focus==='practice'?' active':'')+'" data-news-focus="practice">Practice <span class="ct">'+FM.n(categoryCounts.practice)+'</span></button><button class="news-pill'+(newsView.urgentOnly?' active':'')+'" id="newsUrgentToggle">Pressing only</button></div><input class="news-search" id="newsSearchInput" placeholder="Search headlines, sources, topics..." value="'+H(newsView.query||'')+'"></div>';
+  h+='<div class="news-grid"><div class="news-card"><h4>Lead story</h4>';
+  if(!lead)h+='<p style="font-family:Jost,sans-serif;font-size:11px;color:var(--tx2)">No matching stories for your current filters.</p>';
   else{
-    h+='<p style="margin-bottom:8px"><strong>'+H(lead.title||'Untitled')+'</strong></p>';
-    h+='<p>'+(lead.source?H(lead.source)+' · ':'')+(lead.publishedAt?H(String(lead.publishedAt).slice(0,10)):'recent')+'</p>';
-    h+='<p style="margin-top:8px">Why this matters: prepare a 2–3 sentence update for plan sponsors that ties this development to fees, participant outcomes, or governance oversight.</p>';
-    h+='<div style="margin-top:10px"><a class="btn" href="'+H(lead.link||'#')+'" target="_blank" rel="noopener" style="font-size:9px;padding:6px 10px">OPEN STORY</a></div>';
+    h+='<div class="news-headline"><div class="news-headline-top"><div class="news-headline-title">'+H(lead.title)+'</div><span class="news-tag'+(lead.isPressing?' hot':'')+'">'+(lead.isPressing?'PRESSING':'RELEVANT')+'</span></div><div class="news-meta">'+H(lead.source)+' · '+fmtAgo(lead)+' · score '+lead.score+' · '+lead.category+'</div><div style="font-family:Jost,sans-serif;font-size:11px;color:var(--tx2);line-height:1.55;margin-top:8px">'+H(lead.summary||'No summary available.')+'</div><div class="news-actions"><a class="news-mini" href="'+H(lead.link||'#')+'" target="_blank" rel="noopener">OPEN SOURCE</a><button class="news-mini" data-news-brief="'+H(lead.id)+'">COPY BRIEF</button><button class="news-mini" id="newsLeadTemplatesBtn">OPEN TEMPLATES</button></div></div>';
   }
-  h+='</div><div class="module-card"><h4>Advisor relevance queue</h4>';
-  for(var s=0;s<Math.min(stories.length,8);s++){
-    var it=stories[s],cat=classify(it);
-    h+='<div class="module-row"><div style="min-width:0"><strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+H(it.title||'Untitled')+'</strong><span>'+cat+' · '+H(it.source||'Live feed')+'</span></div><a class="btn" href="'+H(it.link||'#')+'" target="_blank" rel="noopener" style="font-size:9px;padding:6px 10px">OPEN</a></div>';
-  }
-  if(!stories.length)h+='<p>No stories available.</p>';
+  h+='</div><div class="news-card"><h4>Pressing now</h4>';
+  if(!pressing.length)h+='<p style="font-family:Jost,sans-serif;font-size:11px;color:var(--tx2)">No pressing items right now.</p>';
+  for(var p=0;p<pressing.length;p++){var pi=pressing[p];h+='<div class="news-headline"><div class="news-headline-title">'+H(pi.title)+'</div><div class="news-meta">'+H(pi.source)+' · '+fmtAgo(pi)+' · '+pi.category+'</div><div class="news-actions"><a class="news-mini" href="'+H(pi.link||'#')+'" target="_blank" rel="noopener">OPEN</a><button class="news-mini" data-news-brief="'+H(pi.id)+'">COPY BRIEF</button><button class="news-mini" data-news-to-alerts="1">SEND TO ALERTS</button></div></div>'}
   h+='</div></div>';
-
-  h+='<div class="module-grid">';
-  for(var ci=0;ci<catNames.length;ci++){
-    var cn=catNames[ci],list=categories[cn];
-    h+='<div class="module-card"><h4>'+cn+'</h4>';
-    if(!list.length)h+='<p>No stories in this category yet.</p>';
-    for(var li=0;li<Math.min(list.length,4);li++){
-      var st=list[li];
-      h+='<div class="module-row"><div style="min-width:0"><strong style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+H(st.title||'Untitled')+'</strong><span>'+H(st.source||'Live feed')+'</span></div><a class="btn" href="'+H(st.link||'#')+'" target="_blank" rel="noopener" style="font-size:9px;padding:6px 10px">OPEN</a></div>';
-    }
-    h+='</div>';
+  h+='<div class="news-card"><h4>Action queue</h4>';
+  if(newsFeedMeta.status==='error')h+='<p style="font-family:Jost,sans-serif;font-size:11px;color:var(--coral)">Feed unavailable. Suggested new API endpoints: <code>/api/news/advisor</code> and <code>/api/news/relevant</code> returning {items:[title,summary,source,link,publishedAt,topics]}.</p>';
+  if(!filtered.length)h+='<p style="font-family:Jost,sans-serif;font-size:11px;color:var(--tx2)">No stories to show.</p>';
+  for(var s=0;s<Math.min(filtered.length,16);s++){
+    var item=filtered[s];
+    h+='<div class="news-headline"><div class="news-headline-top"><div class="news-headline-title">'+H(item.title)+'</div><span class="news-tag'+(item.isPressing?' hot':'')+'">'+item.category.toUpperCase()+'</span></div><div class="news-meta">'+H(item.source)+' · '+fmtAgo(item)+' · relevance '+item.score+'</div><div class="news-actions"><a class="news-mini" href="'+H(item.link||'#')+'" target="_blank" rel="noopener">READ</a><button class="news-mini" data-news-brief="'+H(item.id)+'">COPY TALK TRACK</button><button class="news-mini" data-news-open-prospects="1">OPEN PROSPECTS</button></div></div>';
   }
   h+='</div></div>';
   el.innerHTML=h;
-  var rb=document.getElementById('newsRefreshBtn');if(rb)rb.addEventListener('click',function(){fetchNews();setTimeout(rNews,350);toast('Refreshing news','info')});
-  var op=document.getElementById('newsOpenProspects');if(op)op.addEventListener('click',function(){go('tbl')});
+  var byId={};for(var b=0;b<all.length;b++)byId[all[b].id]=all[b];
+  var rb=document.getElementById('newsRefreshBtn');if(rb)rb.addEventListener('click',function(){fetchNews({force:true});toast('Refreshing advisor news','info')});
+  var si=document.getElementById('newsSearchInput');if(si)si.addEventListener('input',function(){newsView.query=this.value||'';rNews()});
+  document.querySelectorAll('[data-news-focus]').forEach(function(btn){btn.addEventListener('click',function(){newsView.focus=this.dataset.newsFocus||'all';rNews()})});
+  var ub=document.getElementById('newsUrgentToggle');if(ub)ub.addEventListener('click',function(){newsView.urgentOnly=!newsView.urgentOnly;rNews()});
+  document.querySelectorAll('[data-news-open-prospects]').forEach(function(btn){btn.addEventListener('click',function(){go('tbl')})});
+  document.querySelectorAll('[data-news-to-alerts]').forEach(function(btn){btn.addEventListener('click',function(){go('alerts')})});
+  document.querySelectorAll('[data-news-brief]').forEach(function(btn){btn.addEventListener('click',function(){var it=byId[this.dataset.newsBrief];if(!it)return;var msg=buildBrief(it);navigator.clipboard.writeText(msg).then(function(){toast('Brief copied for outreach','success')}).catch(function(){toast('Clipboard blocked in this browser','warn')})})});
+  var tb=document.getElementById('newsLeadTemplatesBtn');if(tb)tb.addEventListener('click',function(){go('templates')});
 }
 function buildAlerts(){
   var alerts=[];
