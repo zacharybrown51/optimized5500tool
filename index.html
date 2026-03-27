@@ -587,21 +587,34 @@ body.has-news-ticker .news-ticker{top:64px}
 .dark-toggle:hover{background:rgba(255,255,255,.12);color:#edf6fd;border-color:rgba(255,255,255,.22)}
 .dark-toggle svg{width:16px;height:16px;fill:currentColor}
 
-.module-shell{padding:18px;display:flex;flex-direction:column;gap:14px}
-.module-hero{border:1px solid var(--brd);border-radius:16px;padding:16px 18px;background:linear-gradient(180deg,rgba(255,255,255,.97),rgba(242,248,255,.9));box-shadow:var(--shadow-sm)}
 .module-kicker{font-family:Jost,sans-serif;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--acc2);font-weight:700;margin-bottom:6px}
 .module-title{font-family:Jost,sans-serif;font-size:24px;line-height:1.1;color:var(--txh);font-weight:700}
 .module-sub{font-family:Jost,sans-serif;font-size:12px;line-height:1.6;color:var(--tx2);margin-top:7px}
-.module-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.module-card{border:1px solid var(--brd);border-radius:14px;padding:13px;background:var(--bg3)}
-.module-card h4{margin:0 0 6px;font-family:Jost,sans-serif;font-size:12px;color:var(--txh)}
-.module-card p{margin:0;font-family:Jost,sans-serif;font-size:11px;color:var(--tx2);line-height:1.55}
-.module-list{margin:8px 0 0;padding-left:16px}
-.module-list li{font-family:Jost,sans-serif;font-size:10.5px;color:var(--tx2);line-height:1.55}
-.module-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;border-radius:10px;border:1px solid var(--brd);background:rgba(17,138,169,.04);margin-top:8px}
-.module-row strong{font-family:Jost,sans-serif;font-size:11px;color:var(--txh)}
-.module-row span{font-family:Jost,sans-serif;font-size:10px;color:var(--tx3)}
-@media (max-width:950px){.module-grid{grid-template-columns:1fr}}
+.today-shell{padding:18px;display:flex;flex-direction:column;gap:12px;background:linear-gradient(180deg,rgba(247,251,255,.7),rgba(239,246,252,.62))}
+.today-hero{border:1px solid rgba(18,51,74,.13);border-radius:18px;padding:16px 18px;background:radial-gradient(circle at top right,rgba(17,138,169,.14),transparent 45%),linear-gradient(150deg,#103148 0%,#1b4a62 62%,#255f75 100%);color:#ebf6ff;box-shadow:0 18px 32px rgba(9,28,45,.2)}
+.today-hero .module-kicker,.today-hero .module-title,.today-hero .module-sub{color:#ebf6ff}
+.today-hero-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.today-last-check{font-family:IBM Plex Mono,monospace;font-size:9px;color:rgba(235,246,255,.8)}
+.today-section{border:1px solid var(--brd);border-radius:14px;padding:12px;background:rgba(255,255,255,.92);box-shadow:var(--shadow-sm)}
+.today-section h3{margin:0;font-family:Jost,sans-serif;font-size:14px;color:var(--txh)}
+.today-section-sub{font-family:Jost,sans-serif;font-size:10px;color:var(--tx3);margin-top:4px}
+.today-list{display:flex;flex-direction:column;gap:9px;margin-top:10px}
+.today-item{border:1px solid var(--brd);border-radius:12px;padding:11px;background:var(--bg3)}
+.today-item-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.today-item-title{font-family:Jost,sans-serif;font-size:12px;color:var(--txh);font-weight:700;line-height:1.35}
+.today-item-meta{font-family:IBM Plex Mono,monospace;font-size:9px;color:var(--tx3)}
+.today-item-reason{font-family:Jost,sans-serif;font-size:11px;color:var(--tx2);line-height:1.5;margin-top:5px}
+.today-item-action{font-family:Jost,sans-serif;font-size:10px;color:var(--txh);margin-top:6px}
+.today-chip{display:inline-flex;align-items:center;padding:3px 7px;border-radius:999px;font-family:IBM Plex Mono,monospace;font-size:9px;border:1px solid var(--brd);background:var(--bg3);color:var(--tx3)}
+.today-chip.now{border-color:rgba(255,122,89,.35);background:rgba(255,122,89,.1);color:var(--coral)}
+.today-chip.due{border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.12);color:#b7791f}
+.today-chip.opp{border-color:rgba(17,138,169,.28);background:rgba(17,138,169,.1);color:var(--acc2)}
+.today-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.today-btn{padding:6px 9px;border-radius:8px;border:1px solid var(--brd);background:var(--bg3);font-family:Jost,sans-serif;font-size:9px;font-weight:600;color:var(--tx2);cursor:pointer}
+.today-btn:hover{border-color:rgba(17,138,169,.3);color:var(--acc2)}
+.today-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.today-empty{border:1px dashed var(--brd);border-radius:10px;padding:12px;background:rgba(17,138,169,.03);font-family:Jost,sans-serif;font-size:11px;color:var(--tx2)}
+@media (max-width:980px){.today-grid{grid-template-columns:1fr}.today-hero-top{flex-direction:column}}
 .news-shell{padding:20px 18px 22px;display:flex;flex-direction:column;gap:14px;background:linear-gradient(180deg,rgba(247,251,255,.75),rgba(239,246,252,.68))}
 .news-hero{position:relative;border:1px solid rgba(18,51,74,.13);border-radius:20px;padding:18px 20px 16px;background:radial-gradient(circle at top right,rgba(17,138,169,.16),transparent 45%),linear-gradient(145deg,#0d2e45 0%,#174664 55%,#1f5670 100%);color:#e8f4ff;box-shadow:0 20px 38px rgba(8,26,42,.25)}
 .news-hero .module-kicker{color:#9dd8f0}
@@ -2481,83 +2494,195 @@ function buildTodayPriorities(limit){
 }
 function rToday(){
   var el=document.getElementById('p-today');
-  var queue=[],unscheduled=[],watch=[],owners={},todayStats={overdue:0,today:0,next48:0,total:0};
+  var now=Date.now();
+  var dayMs=86400000;
+  var lastSeen=parseInt(localStorage.getItem('mammini_today_last_seen')||'0',10)||0;
+  var seenProspects={};var seenFilings={};var seenAdvisorGap={};
+  try{seenProspects=JSON.parse(localStorage.getItem('mammini_today_seen_prospects')||'{}')||{}}catch(e){}
+  try{seenFilings=JSON.parse(localStorage.getItem('mammini_today_seen_filings')||'{}')||{}}catch(e){}
+  try{seenAdvisorGap=JSON.parse(localStorage.getItem('mammini_today_seen_advisor_gap')||'{}')||{}}catch(e){}
+  function daysSince(ts){if(!ts)return 999;return Math.floor((now-ts)/dayMs)}
+  function fmtLastSeen(ts){if(!ts)return 'First check today';var d=daysSince(ts);if(d<=0)return 'Checked earlier today';if(d===1)return 'Last checked yesterday';return 'Last checked '+d+'d ago'}
+  function updateSeenMap(map,key){if(!key)return;map[key]=now}
+  var queue=[],stuck=[],advanced=[],todayStats={overdue:0,today:0,week:0};
+  var pipelineIndex={};
   for(var ein in pipeline){
-    var item=pipeline[ein];
-    if(!item)continue;
+    var item=pipeline[ein];if(!item)continue;
+    pipelineIndex[ein]=item;
     var plan=getPlanByEin(ein);
     var bucket=dueBucketForDate(item.nextTouch);
     var rec={item:item,plan:plan,bucket:bucket};
-    if(item.owner)owners[item.owner]=(owners[item.owner]||0)+1;
     if(item.nextTouch){
-      queue.push(rec);
-      todayStats.total++;
       if(bucket.bucket==='overdue')todayStats.overdue++;
-      else if(bucket.bucket==='today')todayStats.today++;
-      else if(bucket.bucket==='next48')todayStats.next48++;
-    }else unscheduled.push(rec);
-    var riskScore=0;
-    if(plan){
-      if((plan[6]||0)<-10)riskScore+=2;
-      if(!plan[13])riskScore+=1;
-      if((plan[31]||0)>1.35)riskScore+=1;
-      if(riskScore>0)watch.push({plan:plan,item:item,riskScore:riskScore});
+      if(bucket.bucket==='today')todayStats.today++;
+      if(bucket.days!==null&&bucket.days>=0&&bucket.days<=7)todayStats.week++;
+      queue.push(rec);
+    }
+    var acts=[];try{acts=JSON.parse(localStorage.getItem('act_'+ein)||'[]')||[]}catch(e){acts=[]}
+    var lastActTs=acts.length?parseInt(acts[0].ts||0,10):0;
+    if(daysSince(Math.max(item.updatedAt||0,lastActTs))>=14)stuck.push(rec);
+    if((item.updatedAt||0)>=(now-(7*dayMs))&&(['priority','meeting','closed'].indexOf(item.stage)>=0))advanced.push(rec);
+  }
+  queue.sort(function(a,b){return (a.bucket.days==null?999:a.bucket.days)-(b.bucket.days==null?999:b.bucket.days)});
+  stuck.sort(function(a,b){return (b.item.score||0)-(a.item.score||0)});
+  advanced.sort(function(a,b){return (b.item.updatedAt||0)-(a.item.updatedAt||0)});
+  var alerts=buildAlerts().filter(function(a){var st=getAlertStatus(a);return st!=='dismissed'});
+  var priorities=buildTodayPriorities(Math.max(5,UI_PREFS.todayPriorityLimit||8));
+  var focusCandidates=[];
+  for(var ai=0;ai<alerts.length;ai++){
+    var al=alerts[ai],sevBoost=al.severity==='now'?100:al.severity==='review'?65:35;
+    focusCandidates.push({
+      kind:'alert',
+      ein:al.ein,
+      title:al.headline||((al.planName||'Plan')+' — '+(al.metric||'')),
+      reason:al.reason,
+      actionText:al.nextAction||'Review and take action',
+      priority:sevBoost+(al.urgency||0)*8+(al.impact||0)*4+(al.confidence||0),
+      recency:0,
+      chipClass:al.severity==='now'?'now':'due',
+      chipLabel:al.severity==='now'?'Urgent alert':'Action alert',
+      openTab:'alerts'
+    });
+  }
+  for(var qi=0;qi<queue.length;qi++){
+    var q=queue[qi],days=q.bucket.days==null?8:q.bucket.days;
+    if(days>7)continue;
+    var base=days<0?95:days===0?82:64;
+    var inactivity=daysSince(q.item.updatedAt||0);
+    focusCandidates.push({
+      kind:'pipeline',
+      ein:q.item.ein,
+      title:(q.item.name||q.item.sponsor||q.item.ein)+' — '+FM.usd(q.item.assets||0),
+      reason:'Follow-up '+q.bucket.label.toLowerCase()+(inactivity>=10?' (last touch '+inactivity+'d ago)':''),
+      actionText:'Schedule follow-up + update stage',
+      priority:base+Math.max(0,(q.item.score||0)-70)+Math.min(20,inactivity),
+      recency:inactivity,
+      chipClass:'due',
+      chipLabel:days<0?'Overdue follow-up':'Pipeline follow-up',
+      openTab:'pipe'
+    });
+  }
+  for(var pi=0;pi<priorities.length;pi++){
+    var pr=priorities[pi],pp=pr.plan;
+    focusCandidates.push({
+      kind:'prospect',
+      ein:pp[14],
+      title:FM.usd(pp[4]||0)+' plan — '+(pp[20]?'advisor listed':'no advisor listed'),
+      reason:'Prospect score '+(pp[12]||0)+' with '+FM.p(pp[6]||0)+' growth and '+FM.n(pp[7]||0)+' participants',
+      actionText:'Open plan and decide pipeline entry',
+      priority:38+(pr.urgency||0)*3+(pp[12]||0),
+      recency:2,
+      chipClass:'opp',
+      chipLabel:'Curated opportunity',
+      openTab:'tbl'
+    });
+  }
+  focusCandidates.sort(function(a,b){return b.priority-a.priority||a.recency-b.recency});
+  var focusList=focusCandidates.slice(0,5);
+  if(!focusList.length){
+    focusList=[{
+      kind:'suggestion',ein:'',
+      title:'Nothing urgent right now',
+      reason:'Use this window to advance one in-flight deal and add one new prospect.',
+      actionText:'Open Pipeline and move one plan to the next stage.',
+      chipClass:'opp',chipLabel:'Suggested action',openTab:'pipe'
+    }];
+  }
+  var changed=[];
+  for(var pe in pipeline){
+    var item=pipeline[pe];if(!item)continue;
+    if((item.updatedAt||0)>lastSeen){
+      changed.push({priority:90,ein:item.ein,type:'pipeline',title:(item.name||item.sponsor||item.ein)+' moved in pipeline',why:'Stage is now '+stageLabel(item.stage||'new')+'. Keep momentum with the next touchpoint.',action:'Open pipeline record'});
+    }
+    var acts=[];try{acts=JSON.parse(localStorage.getItem('act_'+pe)||'[]')||[]}catch(e){acts=[]}
+    if(acts.length&&parseInt(acts[0].ts||0,10)>lastSeen){
+      changed.push({priority:84,ein:item.ein,type:'activity',title:'New activity logged — '+(item.name||item.sponsor||item.ein),why:'Recent outreach note added. Use it to set the next concrete step.',action:'Review note and set follow-up'});
     }
   }
-  queue.sort(function(a,b){
-    if(a.bucket.days===null&&b.bucket.days===null)return 0;
-    if(a.bucket.days===null)return 1;
-    if(b.bucket.days===null)return -1;
-    return a.bucket.days-b.bucket.days;
-  });
-  unscheduled.sort(function(a,b){return (b.item.score||0)-(a.item.score||0);});
-  watch.sort(function(a,b){return b.riskScore-a.riskScore||((a.plan[6]||0)-(b.plan[6]||0));});
-  var priorities=buildTodayPriorities(UI_PREFS.todayPriorityLimit||8);
-  var ownerRows=Object.keys(owners).sort(function(a,b){return owners[b]-owners[a];});
+  for(var di=0;di<D.length;di++){
+    var p=D[di],einKey=p[14];
+    if(!seenProspects[einKey]&&(p[12]||0)>=92&&!isInPipeline(einKey)){
+      changed.push({priority:80+(p[12]||0)-90,ein:einKey,type:'prospect',title:'New high-scoring prospect — '+p[0],why:'Score '+(p[12]||0)+' and '+FM.usd(p[4]||0)+' assets. Worth a qualification pass.',action:'Open plan and decide outreach'});
+    }
+    if(p[13]&&!seenFilings[einKey]&&(p[12]||0)>=84){
+      changed.push({priority:76,ein:einKey,type:'filing',title:'New filing surfaced — '+p[0],why:'A filing link is available for a high-fit plan. You can verify advisor/provider details quickly.',action:'Open filing and validate opportunity'});
+    }
+    if(!p[20]&&!seenAdvisorGap[einKey]&&(p[12]||0)>=88){
+      changed.push({priority:78,ein:einKey,type:'advisor',title:'Advisor gap surfaced — '+p[0],why:'No advisor listed on filing for a high-score plan. This may be a live opening.',action:'Open plan and add to pipeline'});
+    }
+  }
+  changed.sort(function(a,b){return b.priority-a.priority});
+  var changedList=changed.slice(0,8);
+  if(!changedList.length){
+    changedList=[{priority:1,ein:'',type:'suggestion',title:'No major deltas since your last check',why:'Use today to tighten follow-up quality on active opportunities.',action:'Log one activity and schedule one next touch'}];
+  }
+  var oppList=priorities.slice(0,5);
+  if(!oppList.length){
+    oppList=D.slice().sort(function(a,b){return (b[12]||0)-(a[12]||0)}).slice(0,3).map(function(p){return {plan:p,urgency:0}});
+  }
   var h='';
-  h+='<div class="module-shell"><div class="module-hero"><div class="module-kicker">Daily execution</div><div class="module-title">Today, '+H(UI_PREFS.advisorName)+'</div><div class="module-sub">Execution queue for '+H(UI_PREFS.idealSegment)+'. Focus on overdue follow-up, high-intent opportunities, and at-risk pipeline records.</div></div>';
-  h+='<div class="module-grid"><div class="module-card"><h4>Work queue health</h4><div class="module-list"><li><b>'+FM.n(todayStats.overdue)+'</b> overdue follow-ups</li><li><b>'+FM.n(todayStats.today)+'</b> due today</li><li><b>'+FM.n(todayStats.next48)+'</b> due in next 48h</li><li><b>'+FM.n(unscheduled.length)+'</b> records missing next-touch date</li></div><div style="margin-top:10px;display:flex;gap:6px"><button class="btn" id="todayOpenPipe" style="font-size:9px;padding:6px 10px">OPEN PIPELINE</button><button class="btn" id="todayOpenAlerts" style="font-size:9px;padding:6px 10px">OPEN ALERTS</button></div></div>';
-  h+='<div class="module-card"><h4>Owner coverage</h4>';
-  if(!ownerRows.length){h+='<p>No owners set yet. Add owner names in pipeline detail to balance advisor workload.</p>'}
-  else{for(var or=0;or<Math.min(ownerRows.length,6);or++){var owner=ownerRows[or];h+='<div class="module-row"><div><strong>'+H(owner)+'</strong><span>Assigned opportunities</span></div><span>'+FM.n(owners[owner])+'</span></div>'}}
-  h+='</div></div>';
-
-  h+='<div class="module-grid"><div class="module-card"><h4>Priority touches</h4>';
-  if(!queue.length)h+='<p>No next-touch dates set. Add dates in Pipeline to generate an actionable daily list.</p>';
-  for(var i=0;i<Math.min(queue.length,UI_PREFS.todayQueueLimit||8);i++){
-    var q=queue[i],qn=q.item.name||q.item.sponsor||q.item.ein;
-    h+='<div class="module-row"><div><strong>'+H(qn)+'</strong><span>'+H(q.item.owner||'Unassigned')+' · '+H(q.bucket.label)+'</span></div><button class="btn" data-open-risk="'+H(q.item.ein)+'" style="font-size:9px;padding:6px 10px">OPEN</button></div>';
-  }
-  h+='</div><div class="module-card"><h4>High-intent prospects not in pipeline</h4>';
-  if(!priorities.length)h+='<p>All high-intent candidates are already being tracked.</p>';
-  for(var j=0;j<priorities.length;j++){
-    var pr=priorities[j],pp=pr.plan;
-    h+='<div class="module-row"><div><strong>'+H(pp[0])+'</strong><span>'+H(pp[2])+' · Score '+pp[12]+' · Urgency '+pr.urgency+'</span></div><button class="btn" data-today-add="'+H(pp[14])+'" style="font-size:9px;padding:6px 10px">ADD</button></div>';
+  h+='<div class="today-shell"><div class="today-hero"><div class="today-hero-top"><div><div class="module-kicker">Daily command center</div><div class="module-title">Today, '+H(UI_PREFS.advisorName)+'</div><div class="module-sub">Know what to do first, what changed, and where to act next.</div></div><div class="today-last-check">'+H(fmtLastSeen(lastSeen))+'</div></div></div>';
+  h+='<div class="today-section"><h3>Focus Today</h3><div class="today-section-sub">Top actions across alerts, follow-ups, and high-priority prospects.</div><div class="today-list">';
+  for(var fi=0;fi<focusList.length;fi++){
+    var f=focusList[fi];
+    var kindLabel=f.kind==='pipeline'?'Pipeline':(f.kind==='alert'?'Alert':'Prospect');
+    var gotoLabel=(f.openTab||'tbl').toUpperCase();
+    h+='<div class="today-item"><div class="today-item-head"><div><div class="today-item-title">'+H(f.title)+'</div><div class="today-item-meta">'+H(kindLabel)+'</div></div><span class="today-chip '+H(f.chipClass||'opp')+'">'+H(f.chipLabel||'Action')+'</span></div><div class="today-item-reason">'+H(f.reason)+'</div><div class="today-item-action">Action: '+H(f.actionText)+'</div><div class="today-actions"><button class="today-btn" data-today-open="'+H(f.ein||'')+'">View plan</button><button class="today-btn" data-today-follow="'+H(f.ein||'')+'">Follow up</button><button class="today-btn" data-today-goto="'+H(f.openTab||'tbl')+'">Open '+H(gotoLabel)+'</button></div></div>';
   }
   h+='</div></div>';
-
-  h+='<div class="module-grid"><div class="module-card"><h4>Risk watch list</h4>';
-  if(!watch.length)h+='<p>No elevated risk flags in current pipeline.</p>';
-  for(var w=0;w<Math.min(watch.length,8);w++){
-    var wr=watch[w],risk=[];
-    if((wr.plan[6]||0)<-10)risk.push('Growth '+FM.p(wr.plan[6]));
-    if(!wr.plan[13])risk.push('No filing URL');
-    if((wr.plan[31]||0)>1.35)risk.push('Expense ratio '+wr.plan[31]+'%');
-    h+='<div class="module-row"><div><strong>'+H(wr.plan[0])+'</strong><span>'+H(risk.join(' · '))+'</span></div><button class="btn" data-open-risk="'+H(wr.item.ein)+'" style="font-size:9px;padding:6px 10px">OPEN</button></div>';
+  h+='<div class="today-section"><h3>What Changed</h3><div class="today-section-sub">Updates since your last check that are worth acting on.</div><div class="today-list">';
+  for(var ci=0;ci<changedList.length;ci++){
+    var c=changedList[ci];
+    h+='<div class="today-item"><div class="today-item-head"><div class="today-item-title">'+H(c.title)+'</div><span class="today-chip">'+H(c.type.toUpperCase())+'</span></div><div class="today-item-reason">'+H(c.why)+'</div><div class="today-item-action">Why care: '+H(c.action)+'</div><div class="today-actions"><button class="today-btn" data-today-open="'+H(c.ein||'')+'">Open plan</button><button class="today-btn" data-today-pipe="'+H(c.ein||'')+'">Open pipeline</button></div></div>';
   }
-  h+='</div><div class="module-card"><h4>Missing scheduling data</h4>';
-  if(!unscheduled.length)h+='<p>All pipeline records have a next-touch date.</p>';
-  for(var u=0;u<Math.min(unscheduled.length,8);u++){
-    var us=unscheduled[u];
-    h+='<div class="module-row"><div><strong>'+H(us.item.name||us.item.sponsor||us.item.ein)+'</strong><span>'+H(us.item.owner||'Unassigned')+' · stage '+H(stageLabel(us.item.stage||'new'))+'</span></div><button class="btn" data-open-risk="'+H(us.item.ein)+'" style="font-size:9px;padding:6px 10px">PLAN</button></div>';
+  h+='</div></div>';
+  h+='<div class="today-grid"><div class="today-section"><h3>Pipeline Momentum</h3><div class="today-section-sub">Due now, stuck records, and recently advanced plans.</div>';
+  h+='<div class="today-list">';
+  h+='<div class="today-item"><div class="today-item-title">'+FM.n(todayStats.overdue)+' overdue · '+FM.n(todayStats.today)+' due today · '+FM.n(todayStats.week)+' due this week</div><div class="today-item-reason">These follow-ups drive immediate execution quality.</div><div class="today-actions"><button class="today-btn" data-today-goto="pipe">Open pipeline board</button><button class="today-btn" data-today-goto="alerts">Open alerts</button></div></div>';
+  if(stuck.length){
+    for(var si=0;si<Math.min(3,stuck.length);si++){
+      var st=stuck[si],stDays=daysSince(st.item.updatedAt||0);
+      h+='<div class="today-item"><div class="today-item-head"><div class="today-item-title">'+H(st.item.name||st.item.sponsor||st.item.ein)+' — '+FM.usd(st.item.assets||0)+'</div><span class="today-chip due">Stuck</span></div><div class="today-item-reason">No activity in '+stDays+' days.</div><div class="today-item-action">Action: log activity and set a next touch date.</div><div class="today-actions"><button class="today-btn" data-today-log="'+H(st.item.ein)+'">Log activity</button><button class="today-btn" data-today-stage="'+H(st.item.ein)+'">Move stage</button><button class="today-btn" data-today-open="'+H(st.item.ein)+'">Open plan</button></div></div>';
+    }
+  }else{
+    h+='<div class="today-empty">No stuck pipeline records right now. Keep momentum by moving one qualified plan forward today.</div>';
   }
-  h+='</div></div></div>';
-
+  if(advanced.length){
+    for(var ad=0;ad<Math.min(2,advanced.length);ad++){
+      var av=advanced[ad];
+      h+='<div class="today-item"><div class="today-item-head"><div class="today-item-title">'+H(av.item.name||av.item.sponsor||av.item.ein)+'</div><span class="today-chip opp">Advanced</span></div><div class="today-item-reason">Recently moved to '+H(stageLabel(av.item.stage||'new'))+'.</div><div class="today-actions"><button class="today-btn" data-today-open="'+H(av.item.ein)+'">Open plan</button><button class="today-btn" data-today-follow="'+H(av.item.ein)+'">Set next touch</button></div></div>';
+    }
+  }
+  h+='</div></div>';
+  h+='<div class="today-section"><h3>Opportunities</h3><div class="today-section-sub">Curated plans to review next (not exhaustive).</div><div class="today-list">';
+  for(var oi=0;oi<Math.min(5,oppList.length);oi++){
+    var op=oppList[oi],plan=op.plan,sig=[];
+    if(!plan[20])sig.push('no advisor listed');
+    if((plan[31]||0)>1.75)sig.push('high fees');
+    if((plan[6]||0)>=12)sig.push('strong growth');
+    if(!sig.length)sig.push('high score fit');
+    h+='<div class="today-item"><div class="today-item-head"><div class="today-item-title">'+FM.usd(plan[4]||0)+' plan — '+H(plan[0])+'</div><span class="today-chip opp">Score '+(plan[12]||0)+'</span></div><div class="today-item-reason">'+H(sig.slice(0,2).join(' · '))+'</div><div class="today-item-action">Action: qualify fit, then add to pipeline if timing is right.</div><div class="today-actions"><button class="today-btn" data-today-open="'+H(plan[14])+'">View plan</button><button class="today-btn" data-today-add="'+H(plan[14])+'">Add to pipeline</button><button class="today-btn" data-today-goto="tbl">Open prospects</button></div></div>';
+  }
+  if(!oppList.length)h+='<div class="today-empty">Nothing surfaced at the top tier. Review the Prospects tab for secondary candidates.</div>';
+  h+='</div></div></div></div>';
   el.innerHTML=h;
-  var pBtn=document.getElementById('todayOpenPipe');if(pBtn)pBtn.addEventListener('click',function(){go('pipe')});
-  var aBtn=document.getElementById('todayOpenAlerts');if(aBtn)aBtn.addEventListener('click',function(){go('alerts')});
+  document.querySelectorAll('[data-today-goto]').forEach(function(btn){btn.addEventListener('click',function(){go(this.dataset.todayGoto||'tbl')})});
   document.querySelectorAll('[data-today-add]').forEach(function(btn){btn.addEventListener('click',function(){var plan=getPlanByEin(this.dataset.todayAdd);if(!plan)return;ensurePipeline(plan,'new');toast('Added to pipeline','success');rToday()})});
-  document.querySelectorAll('[data-open-risk]').forEach(function(btn){btn.addEventListener('click',function(){var plan=getPlanByEin(this.dataset.openRisk);if(plan){go('tbl');oD(D.indexOf(plan),D)}})});
+  document.querySelectorAll('[data-today-open]').forEach(function(btn){btn.addEventListener('click',function(){var ein=this.dataset.todayOpen||'';if(!ein)return;var plan=getPlanByEin(ein);if(plan){go('tbl');oD(D.indexOf(plan),D)}})});
+  document.querySelectorAll('[data-today-pipe]').forEach(function(btn){btn.addEventListener('click',function(){var ein=this.dataset.todayPipe||'';if(ein){var plan=getPlanByEin(ein);if(plan)ensurePipeline(plan,'qualified')}go('pipe')})});
+  document.querySelectorAll('[data-today-follow]').forEach(function(btn){btn.addEventListener('click',function(){var ein=this.dataset.todayFollow||'';if(!ein){go('pipe');return}var item=pipelineIndex[ein],plan=getPlanByEin(ein);if(plan&&!item)item=ensurePipeline(plan,'contacted');if(!item)return;var d=prompt('Set follow-up date (YYYY-MM-DD):',item.nextTouch||'');if(!d)return;item.nextTouch=d;item.updatedAt=Date.now();savePipeline({silent:true});toast('Follow-up scheduled','success');rToday()})});
+  document.querySelectorAll('[data-today-stage]').forEach(function(btn){btn.addEventListener('click',function(){var ein=this.dataset.todayStage||'';var item=pipelineIndex[ein];if(!item)return;var idx=0;for(var i=0;i<PIPELINE_STAGES.length;i++){if(PIPELINE_STAGES[i].id===item.stage){idx=i;break}}var next=PIPELINE_STAGES[Math.min(idx+1,PIPELINE_STAGES.length-1)];setPipelineStage(ein,next.id);toast('Moved to '+next.label,'success');rToday()})});
+  document.querySelectorAll('[data-today-log]').forEach(function(btn){btn.addEventListener('click',function(){var ein=this.dataset.todayLog||'';if(!ein)return;var note=prompt('Log activity note:','Call / email update');if(!note)return;var acts=[];try{acts=JSON.parse(localStorage.getItem('act_'+ein)||'[]')||[]}catch(e){acts=[]}acts.unshift({ts:Date.now(),txt:note});localStorage.setItem('act_'+ein,JSON.stringify(acts.slice(0,40)));if(pipeline[ein]){pipeline[ein].updatedAt=Date.now();savePipeline({silent:true})}toast('Activity logged','success');rToday()})});
+  for(var s=0;s<Math.min(12,D.length);s++){
+    var sp=D[s];
+    updateSeenMap(seenProspects,sp[14]);
+    if(sp[13])updateSeenMap(seenFilings,sp[14]);
+    if(!sp[20])updateSeenMap(seenAdvisorGap,sp[14]);
+  }
+  localStorage.setItem('mammini_today_last_seen',String(now));
+  localStorage.setItem('mammini_today_seen_prospects',JSON.stringify(seenProspects));
+  localStorage.setItem('mammini_today_seen_filings',JSON.stringify(seenFilings));
+  localStorage.setItem('mammini_today_seen_advisor_gap',JSON.stringify(seenAdvisorGap));
 }
 function rNews(){
   var el=document.getElementById('p-news');
