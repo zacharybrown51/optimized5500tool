@@ -657,6 +657,11 @@ body.has-news-ticker .news-ticker{top:64px}
 .tpl-template-title{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
 .tpl-template-name{font-family:Jost,sans-serif;font-size:12px;font-weight:700;color:var(--txh)}
 .tpl-template-meta{font-family:Jost,sans-serif;font-size:10px;color:var(--tx3);margin-top:3px}
+.tpl-template-summary{font-family:Jost,sans-serif;font-size:10.5px;color:var(--tx2);line-height:1.5;margin-top:7px}
+.tpl-template-preview{display:none;margin-top:9px;padding:10px;border-radius:10px;border:1px solid var(--brd);background:#fff}
+.tpl-template-preview.is-open{display:block}
+.tpl-email-subject{font-family:IBM Plex Mono,monospace;font-size:10px;color:var(--txh);font-weight:700;margin-bottom:7px}
+.tpl-email-body{white-space:pre-wrap;font-family:Jost,sans-serif;font-size:11px;line-height:1.6;color:var(--tx2)}
 .tpl-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 .tpl-btn{padding:6px 9px;border-radius:8px;border:1px solid var(--brd);background:var(--bg3);font-family:Jost,sans-serif;font-size:9px;font-weight:600;color:var(--tx2);cursor:pointer}
 .tpl-btn:hover{border-color:rgba(17,138,169,.3);color:var(--acc2)}
@@ -1647,8 +1652,20 @@ function setMapCityHover(city){
    if(hot){layer.bringToFront();layer.openTooltip()}else{layer.closeTooltip()}
  }
 }
-var tabIds=['today','tbl','pipe','alerts','news','dash','hm','templates','analyze'];var tabsEl=document.getElementById('tabs');
-['TODAY','PROSPECTS','PIPELINE','ALERTS','NEWS','OVERVIEW','GEO MAP','TEMPLATES','FILING ANALYZER'].forEach(function(nm,i){var b=document.createElement('button');b.className='tab'+(i===0?' active':'');b.textContent=nm;b.dataset.tab=tabIds[i];b.dataset.short=String(i+1);b.addEventListener('click',function(){go(this.dataset.tab)});tabsEl.appendChild(b)});
+var NAV_TABS=[
+  {id:'today',label:'TODAY',panel:'p-today'},
+  {id:'tbl',label:'PROSPECTS',panel:'p-tbl'},
+  {id:'pipe',label:'PIPELINE',panel:'p-pipe'},
+  {id:'alerts',label:'ALERTS',panel:'p-alerts'},
+  {id:'news',label:'NEWS',panel:'p-news'},
+  {id:'dash',label:'OVERVIEW',panel:'p-dash'},
+  {id:'hm',label:'GEO MAP',panel:'p-hm'},
+  {id:'templates',label:'TEMPLATES',panel:'p-templates'},
+  {id:'analyze',label:'FILING ANALYZER',panel:'p-analyze'}
+];
+var tabIds=NAV_TABS.map(function(t){return t.id});
+var tabsEl=document.getElementById('tabs');
+NAV_TABS.forEach(function(tab,i){var b=document.createElement('button');b.className='tab'+(i===0?' active':'');b.textContent=tab.label;b.dataset.tab=tab.id;b.dataset.short=String(i+1);b.addEventListener('click',function(){go(this.dataset.tab)});tabsEl.appendChild(b)});
 var sideToggle=document.getElementById('sideToggle');
 if(tabsEl)tabsEl.querySelectorAll('.tab').forEach(function(btn){if(btn.dataset.tab)btn.title='Open '+btn.textContent});
 if(UI_PREFS.sidebarCollapsed){var sideNav=document.getElementById('sideNav');if(sideNav)sideNav.classList.add('collapsed')}
@@ -1667,7 +1684,8 @@ if(document.getElementById('dtl').classList.contains('open'))cD();
 document.body.classList.toggle('hm-lock',t==='hm');
 ct=t;
 document.querySelectorAll('.tab').forEach(function(b){b.classList.toggle('active',b.dataset.tab===t)});
-document.querySelectorAll('.panel').forEach(function(p,i){p.classList.toggle('active',tabIds[i]===t)});
+var map={};for(var ti=0;ti<NAV_TABS.length;ti++)map[NAV_TABS[ti].id]=NAV_TABS[ti].panel;
+document.querySelectorAll('.panel').forEach(function(p){p.classList.toggle('active',p.id===map[t])});
 var titles={analyze:'Filing Analyzer',dash:'Overview',tbl:'Prospects',pipe:'Pipeline',hm:'Geo Map',today:'Today',news:'News',alerts:'Alerts',templates:'Templates'};
 document.title=(titles[t]||'Mammini')+' | Mammini 401k Prospector';
 if(t==='analyze')rAnalyze();
@@ -2718,7 +2736,7 @@ function rNews(){
   var categoryCounts={all:all.length,regulatory:0,providers:0,markets:0,practice:0};
   for(var i=0;i<all.length;i++){categoryCounts[all[i].category]=(categoryCounts[all[i].category]||0)+1}
   var h='';
-  h+='<div class="news-shell"><div class="news-hero"><button class="news-refresh-btn'+(newsFeedMeta.status==='loading'?' is-loading':'')+'" id="newsRefreshBtn" title="Refresh feed" aria-label="Refresh feed"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A7.95 7.95 0 0012 4V1L7 6l5 5V7a5 5 0 11-4.9 6h-2.02A7 7 0 1017.65 6.35z"/></svg></button><div class="module-kicker">Advisor intelligence center</div><div class="module-title">Newsroom</div><div class="module-sub">Prioritized retirement-plan coverage for '+H(UI_PREFS.homeRegion)+'. Feed is ranked by urgency + advisor relevance, then grouped so every action button has a clear purpose.</div><div class="news-meta" style="color:rgba(232,244,255,.86);margin-top:8px">Source endpoint: '+H(newsFeedMeta.endpoint||'pending')+' · Updated '+(newsFeedMeta.updatedAt?new Date(newsFeedMeta.updatedAt).toLocaleTimeString(): 'not yet')+'</div></div>';
+  h+='<div class="news-shell"><div class="news-hero"><button class="news-refresh-btn'+(newsFeedMeta.status==='loading'?' is-loading':'')+'" id="newsRefreshBtn" title="Refresh feed" aria-label="Refresh feed"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A7.95 7.95 0 0012 4V1L7 6l5 5V7a5 5 0 11-4.9 6h-2.02A7 7 0 1017.65 6.35z"/></svg></button><div class="module-kicker">Advisor intelligence</div><div class="module-title">Newsroom</div><div class="module-sub">Relevant retirement-plan updates for '+H(UI_PREFS.homeRegion)+', ranked by urgency and advisor impact so you can decide quickly.</div><div class="news-meta" style="color:rgba(232,244,255,.86);margin-top:8px">Source endpoint: '+H(newsFeedMeta.endpoint||'pending')+' · Updated '+(newsFeedMeta.updatedAt?new Date(newsFeedMeta.updatedAt).toLocaleTimeString(): 'not yet')+'</div></div>';
   h+='<div class="news-controls"><div class="news-pill-row"><button class="news-pill'+(newsView.focus==='all'?' active':'')+'" data-news-focus="all">All <span class="ct">'+FM.n(categoryCounts.all)+'</span></button><button class="news-pill'+(newsView.focus==='regulatory'?' active':'')+'" data-news-focus="regulatory">Regulatory <span class="ct">'+FM.n(categoryCounts.regulatory)+'</span></button><button class="news-pill'+(newsView.focus==='providers'?' active':'')+'" data-news-focus="providers">Providers <span class="ct">'+FM.n(categoryCounts.providers)+'</span></button><button class="news-pill'+(newsView.focus==='markets'?' active':'')+'" data-news-focus="markets">Markets <span class="ct">'+FM.n(categoryCounts.markets)+'</span></button><button class="news-pill'+(newsView.focus==='practice'?' active':'')+'" data-news-focus="practice">Practice <span class="ct">'+FM.n(categoryCounts.practice)+'</span></button><button class="news-pill'+(newsView.urgentOnly?' active':'')+'" id="newsUrgentToggle">Pressing only</button></div><input class="news-search" id="newsSearchInput" placeholder="Search headlines, sources, topics..." value="'+H(newsView.query||'')+'"></div>';
   h+='<div class="news-grid"><div class="news-card"><h4>Lead story</h4>';
   if(!lead)h+='<p style="font-family:Jost,sans-serif;font-size:11px;color:var(--tx2)">No matching stories for your current filters.</p>';
@@ -2814,7 +2832,7 @@ function rAlerts(){
   var allShown=[].concat(tiers.now,tiers.review,tiers.background);
   var topStack=(alertsShowAll?allShown:allShown.slice(0,ALERTS_DEFAULT_LIMIT)).slice(0,ALERTS_ABSOLUTE_LIMIT);
   var h='';
-  h+='<div class="alerts-shell"><div class="alerts-hero"><div class="module-kicker">Personal assistant flow</div><div class="module-title">What needs attention now</div><div class="module-sub">Scan once, know what matters, and take action instantly.</div></div>';
+  h+='<div class="alerts-shell"><div class="alerts-hero"><div class="module-kicker">Advisor action queue</div><div class="module-title">What needs attention now</div><div class="module-sub">Review high-signal items and take the next step without leaving this view.</div></div>';
   h+='<div class="alerts-toolbar"><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="alerts-pill'+(alertsOnlyActionable?' active':'')+'" id="alertsOnlyActionable">Only actionable</button><button class="alerts-pill'+(alertsShowDismissed?' active':'')+'" id="alertsShowDismissed">Show dismissed</button><button class="alerts-pill" id="alertsMarkAll">Mark all reviewed</button><button class="alerts-pill" id="alertsViewAll">'+(alertsShowAll?'Show top 7':'View all')+'</button></div><div style="font-family:Jost,sans-serif;font-size:10px;color:var(--tx3)">Unread '+unreadCt+' · 🔴 '+tiers.now.length+' · 🟡 '+tiers.review.length+' · ⚪ '+tiers.background.length+'</div></div>';
   if(!topStack.length){
     h+='<div class="alert-empty"><strong>Nothing needs attention right now.</strong><br><span style="color:var(--tx3)">Passive insight: '+(alerts.length?('You have '+alerts.length+' low-priority background signals available when you toggle “Only actionable” off.'):('No meaningful signals crossed your thresholds today.'))+'</span></div>';
@@ -2841,13 +2859,13 @@ function rAlerts(){
 function rTemplates(){
   var el=document.getElementById('p-templates');
   var templates=[
-    {id:'first_outreach_email',cat:'Email',name:'Warm first outreach email',intent:'Book a short intro call',body:"Subject: Quick idea to support {{company_name}}'s retirement plan\\n\\nHi {{first_name}},\\n\\nI hope your week is going well. I support plan sponsors in {{region}} and noticed several plans similar to {{company_name}} are reducing participant costs while improving engagement.\\n\\nIf helpful, I can share a concise benchmark view covering fees, service model, and participant outcomes. Would a {{meeting_window}} intro conversation next week be useful?\\n\\nNo prep needed on your end—I\\'ll keep it practical and sponsor-friendly.\\n\\n{{signature}}"},
-    {id:'post_meeting_recap',cat:'Email',name:'Post-meeting recap + next steps',intent:'Confirm decisions and momentum',body:"Subject: Thank you + next steps for {{company_name}}'s plan\\n\\nHi {{first_name}},\\n\\nThank you for the thoughtful conversation today. Based on what matters most to your committee, here are the three actions we discussed:\\n1) Benchmark current plan fees and provider support\\n2) Identify one design change to improve participation\\n3) Build a clean timeline for committee review\\n\\nI\\'ll send the benchmark snapshot before our next check-in. If you\\'d like, I can also prepare a one-page committee brief you can forward internally.\\n\\n{{signature}}"},
-    {id:'fiduciary_brief',cat:'Committee',name:'Committee update talking points',intent:'Support fiduciary communication',body:"Committee Brief: {{company_name}} Retirement Plan\\n\\nWhat changed:\\n- {{signal_name}}\\n\\nWhy it matters to participants:\\n- {{impact}}\\n\\nRecommendation:\\n- {{recommendation}}\\n\\nSuggested committee action this quarter:\\n- Approve a focused fee + service benchmark review\\n- Document fiduciary rationale and participant impact\\n\\nPrepared by: {{advisor_name}}, {{advisor_title}}"},
-    {id:'fee_displacement_angle',cat:'Opportunity',name:'Fee displacement outreach angle',intent:'Open a value-focused conversation',body:"Opportunity Summary\\n\\nPlan sponsor: {{company_name}}\\nSignal observed: Elevated fee ratio ({{fee_ratio}}%)\\nPeer reference: {{peer_fee_ratio}}% in similar plans\\n\\nWarm outreach opener:\\n\\\"{{first_name}}, I reviewed public filings for plans similar to yours and noticed an opportunity to potentially reduce participant costs without increasing admin burden. Would you be open to a short benchmark conversation?\\\"\\n\\n{{signature}}"},
-    {id:'call_talk_track',cat:'Call',name:'15-minute first call talk track',intent:'Structure a confident first call',body:"First 15-minute call flow\\n\\nMinute 1-3: Build context\\n- Thank them for time and clarify committee priorities.\\n\\nMinute 4-8: Share one useful observation\\n- Mention one benchmark insight relevant to {{company_name}}.\\n\\nMinute 9-12: Align on value\\n- Ask where sponsor and participant experience feels most friction-heavy.\\n\\nMinute 13-15: Confirm next step\\n- Offer a concise action brief and schedule the next checkpoint ({{meeting_window}}).\\n\\nClose warmly:\\n\\\"I appreciate your time, {{first_name}}. I\\'ll keep everything practical and easy to review.\\\""},
-    {id:'missing_filing_followup',cat:'Operations',name:'Missing filing follow-up note',intent:'Request data completion gracefully',body:"Hi {{first_name}},\\n\\nQuick note: we couldn't locate a complete filing package for {{company_name}} in the public feed. This is common and easy to fix.\\n\\nIf helpful, I can coordinate retrieval and provide a clean summary for your committee records so reviews stay efficient and well documented.\\n\\nWould you like me to send a simple checklist of what we need?\\n\\n{{signature}}"},
-    {id:'client_checkin',cat:'Client Care',name:'Quarterly client check-in',intent:'Strengthen ongoing relationships',body:"Subject: Quick quarterly check-in\\n\\nHi {{first_name}},\\n\\nI wanted to check in and make sure your plan priorities for this quarter are fully supported.\\n\\nIf useful, I can send a one-page snapshot covering:\\n- Participant engagement trend\\n- Service response quality\\n- Fee and provider positioning\\n\\nIf there's one topic you want to prioritize, I\\'ll tailor everything around that.\\n\\n{{signature}}"}
+    {id:'first_outreach_email',cat:'Email',name:'Intro outreach: benchmark offer',intent:'When you want a warm first conversation',body:"Subject: Quick benchmark idea for {{company_name}}\\n\\nHi {{first_name}},\\n\\nI work with retirement plan sponsors across {{region}}, and I noticed plans similar to {{company_name}} are finding room to improve participant outcomes while keeping administration simple.\\n\\nIf helpful, I can share a short benchmark view on fees, service support, and participant experience. Would you be open to a {{meeting_window}} conversation next week?\\n\\nIf now isn't the right time, no problem at all—happy to circle back when it is.\\n\\n{{signature}}"},
+    {id:'post_meeting_recap',cat:'Email',name:'After-meeting recap + next step',intent:'When you want clear momentum after a call',body:"Subject: Recap and next step for {{company_name}}\\n\\nHi {{first_name}},\\n\\nThanks again for the conversation today. Here is the short recap we aligned on:\\n\\n1) Benchmark current fee and service structure\\n2) Identify one design tweak that could improve engagement\\n3) Build a practical committee timeline\\n\\nI\\'ll send the benchmark snapshot before our next check-in. If useful, I can also include a one-page committee brief you can forward internally.\\n\\n{{signature}}"},
+    {id:'fiduciary_brief',cat:'Committee',name:'Committee brief: signal + recommendation',intent:'When you need concise fiduciary framing',body:"Subject: Committee brief for {{company_name}}\\n\\nHi {{first_name}},\\n\\nHere\\'s a short committee-ready summary:\\n\\nWhat changed\\n- {{signal_name}}\\n\\nWhy it matters\\n- {{impact}}\\n\\nRecommended next step\\n- {{recommendation}}\\n\\nIf helpful, I can format this into your committee packet language and include a comparison slide.\\n\\n{{signature}}"},
+    {id:'fee_displacement_angle',cat:'Opportunity',name:'Fee conversation opener',intent:'When fee pressure is a credible opening',body:"Subject: One fee observation for {{company_name}}\\n\\nHi {{first_name}},\\n\\nWhile reviewing public filings, I noticed {{company_name}} appears around {{fee_ratio}}% versus roughly {{peer_fee_ratio}}% for similar plans.\\n\\nThat gap doesn't always mean change is needed, but it can be worth a quick review to confirm participants are getting strong value for cost.\\n\\nWould a {{meeting_window}} benchmark discussion be useful?\\n\\n{{signature}}"},
+    {id:'call_talk_track',cat:'Call',name:'First call talk track (15 min)',intent:'When you want a natural structure for a discovery call',body:"Subject: Call notes for {{company_name}}\\n\\nHi {{first_name}},\\n\\nThanks for taking time to connect. Here\\'s the simple flow I\\'d use for a first conversation:\\n\\n- Start with your current priorities and committee goals\\n- Share one benchmark insight tied to {{company_name}}\\n- Discuss where participant or sponsor friction shows up most\\n- Agree on one concrete next step and timeline ({{meeting_window}})\\n\\nI\\'ll keep the discussion practical and easy to use internally.\\n\\n{{signature}}"},
+    {id:'missing_filing_followup',cat:'Operations',name:'Missing filing follow-up',intent:'When filing data is incomplete and you need it quickly',body:"Subject: Quick filing follow-up for {{company_name}}\\n\\nHi {{first_name}},\\n\\nQuick heads up: I couldn't find a complete filing package for {{company_name}} in the public feed yet. This is common and usually easy to resolve.\\n\\nIf you'd like, I can handle retrieval and send back a clean summary your committee can use right away.\\n\\nWant me to send the short checklist?\\n\\n{{signature}}"},
+    {id:'client_checkin',cat:'Client Care',name:'Quarterly relationship check-in',intent:'When you want to stay proactive with existing clients',body:"Subject: Quick quarterly check-in\\n\\nHi {{first_name}},\\n\\nI wanted to check in and make sure your retirement plan priorities are covered this quarter.\\n\\nIf useful, I can send a one-page snapshot on:\\n- participant engagement trend\\n- service response quality\\n- fee and provider positioning\\n\\nIf there\\'s one topic you want to prioritize, I\\'ll tailor everything around it.\\n\\n{{signature}}"}
   ];
   function applyVoiceStyle(text){
     var out=text;
@@ -2870,14 +2888,32 @@ function rTemplates(){
     var raw=applyVoiceStyle(tp.body);
     return raw.replace(/\\{\\{\\s*([a-z_]+)\\s*\\}\\}/gi,function(_,k){return vars[k]||''});
   }
+  function splitEmailPreview(text){
+    var lines=String(text||'').split('\\n');
+    var subject='Follow-up';
+    if(lines.length&&/^Subject:/i.test(lines[0]))subject=lines.shift().replace(/^Subject:\\s*/i,'').trim()||'Follow-up';
+    while(lines.length&&lines[0].trim()==='')lines.shift();
+    var greeting='';
+    if(lines.length&&/^hi\\b|^hello\\b|^good\\s/i.test(lines[0].toLowerCase()))greeting=lines.shift().trim();
+    while(lines.length&&lines[0].trim()==='')lines.shift();
+    var signoffIdx=-1;
+    for(var i=Math.max(0,lines.length-4);i<lines.length;i++){
+      var low=(lines[i]||'').toLowerCase().trim();
+      if(low==='warmly,'||low==='best,'||low==='thanks,'||low==='thank you,'||low==='regards,'){signoffIdx=i;break}
+    }
+    var bodyLines=signoffIdx>=0?lines.slice(0,signoffIdx):lines.slice();
+    var signoff=signoffIdx>=0?lines.slice(signoffIdx).join('\\n').trim():'';
+    return {subject:subject,greeting:greeting,body:bodyLines.join('\\n').trim(),signoff:signoff};
+  }
+  var activePlan=(sel!=null&&fd&&fd[sel])?fd[sel]:null;
   var vars=templateView.vars||{
     advisor_name:UI_PREFS.advisorName||'Advisor',
     advisor_title:UI_PREFS.advisorTitle||'Retirement Plan Advisor',
     first_name:UI_PREFS.defaultContactName||'there',
-    company_name:UI_PREFS.defaultCompanyName||'your team',
-    region:UI_PREFS.homeRegion||'your region',
-    industry:(UI_PREFS.idealSegment||'retirement plans').split(' with ')[0],
-    signal_name:'Fee pressure and service model mismatch',
+    company_name:(activePlan&&activePlan[1])||UI_PREFS.defaultCompanyName||'your team',
+    region:(activePlan&&activePlan[2])||UI_PREFS.homeRegion||'your region',
+    industry:(activePlan&&activePlan[39])||((UI_PREFS.idealSegment||'retirement plans').split(' with ')[0]),
+    signal_name:(activePlan&&!activePlan[20])?'No advisor listed on latest filing':'Fee pressure and service model mismatch',
     impact:'Potentially higher participant cost and lower confidence in plan value.',
     recommendation:'Run a fee + service benchmark and present alternatives with documented fiduciary rationale.',
     meeting_window:'15–20 minute',
@@ -2898,16 +2934,16 @@ function rTemplates(){
   for(var sn=0;sn<filtered.length;sn++){if(filtered[sn].id===templateView.selectedId){selectedTemplateName=filtered[sn].name;break}}
   var categories=['all'];for(var c=0;c<templates.length;c++){if(categories.indexOf(templates[c].cat)<0)categories.push(templates[c].cat)}
   var h='';
-  h+='<div class="tpl-shell"><div class="tpl-hero"><div class="module-kicker">You-focused advisor communication</div><div class="module-title">Template Studio</div><div class="module-sub">Create warm, practical outreach in seconds. Every button has one purpose: personalize, preview, copy, or route your next action.</div></div>';
-  h+='<div class="tpl-grid"><div class="tpl-card"><h4>Personalization profile</h4><div class="tpl-input-grid"><input class="tpl-input" id="tplFirstName" value="'+H(vars.first_name)+'" placeholder="Contact first name"><input class="tpl-input" id="tplCompanyName" value="'+H(vars.company_name)+'" placeholder="Plan sponsor / company"><input class="tpl-input" id="tplMeetingWindow" value="'+H(vars.meeting_window)+'" placeholder="e.g. 15-minute"><input class="tpl-input" id="tplSignalName" value="'+H(vars.signal_name)+'" placeholder="Primary signal"></div><div style="margin-top:8px"><textarea class="tpl-input" id="tplSignature" style="min-height:74px;resize:vertical" placeholder="Warmly,\\n'+H(UI_PREFS.advisorName)+'">'+H(vars.signature)+'</textarea></div><div class="tpl-actions"><button class="tpl-btn" id="tplApplyVars">APPLY TO PREVIEW</button><button class="tpl-btn" id="tplSaveDefaults">SAVE AS DEFAULTS</button><button class="tpl-btn" id="tplOpenSettings">OPEN SETTINGS</button></div></div>';
+  h+='<div class="tpl-shell"><div class="tpl-hero"><div class="module-kicker">Advisor communication toolkit</div><div class="module-title">Template Studio</div><div class="module-sub">Pick a scenario, personalize once, and expand a template to preview the full email before you send.</div></div>';
+  h+='<div class="tpl-grid"><div class="tpl-card"><h4>Personalization profile</h4><p style="font-family:Jost,sans-serif;font-size:10px;color:var(--tx3);margin-top:4px">'+(activePlan?('Using selected plan context: '+H(activePlan[0])):'No plan selected — preview uses your saved defaults.')+'</p><div class="tpl-input-grid"><input class="tpl-input" id="tplFirstName" value="'+H(vars.first_name)+'" placeholder="Contact first name"><input class="tpl-input" id="tplCompanyName" value="'+H(vars.company_name)+'" placeholder="Plan sponsor / company"><input class="tpl-input" id="tplMeetingWindow" value="'+H(vars.meeting_window)+'" placeholder="e.g. 15-minute"><input class="tpl-input" id="tplSignalName" value="'+H(vars.signal_name)+'" placeholder="Primary signal"></div><div style="margin-top:8px"><textarea class="tpl-input" id="tplSignature" style="min-height:74px;resize:vertical" placeholder="Warmly,\\n'+H(UI_PREFS.advisorName)+'">'+H(vars.signature)+'</textarea></div><div class="tpl-actions"><button class="tpl-btn" id="tplApplyVars">Update previews</button><button class="tpl-btn" id="tplSaveDefaults">Save as defaults</button><button class="tpl-btn" id="tplOpenSettings">Open settings</button></div></div>';
   h+='<div class="tpl-card"><h4>Library controls</h4><div class="tpl-cat-row">';
   for(var ci=0;ci<categories.length;ci++){var cat=categories[ci],label=cat==='all'?'All templates':cat;h+='<button class="tpl-cat-btn'+(templateView.category===cat?' active':'')+'" data-tpl-cat="'+H(cat)+'">'+H(label)+'</button>'}
-  h+='</div><div style="margin-top:8px"><input class="tpl-input" id="tplSearchInput" placeholder="Search templates by intent or language..." value="'+H(templateView.query||'')+'"></div><div class="tpl-actions"><button class="tpl-btn" id="tplCopyAll">COPY SELECTED TEMPLATE</button><button class="tpl-btn" id="tplAnalyzeBtn">OPEN FILING ANALYZER</button><button class="tpl-btn" id="tplPipeBtn">OPEN PIPELINE</button></div><p style="font-family:Jost,sans-serif;font-size:10px;color:var(--tx3);margin:8px 0 0">Templates shown: '+FM.n(filtered.length)+' of '+FM.n(templates.length)+'. '+(selectedTemplateName?('Selected: '+H(selectedTemplateName)):'')+'</p></div></div>';
-  h+='<div class="tpl-card"><h4>Template previews</h4>';
+  h+='</div><div style="margin-top:8px"><input class="tpl-input" id="tplSearchInput" placeholder="Search by use case or phrasing..." value="'+H(templateView.query||'')+'"></div><div class="tpl-actions"><button class="tpl-btn" id="tplCopyAll">Copy expanded template</button><button class="tpl-btn" id="tplAnalyzeBtn">Open filing analyzer</button><button class="tpl-btn" id="tplPipeBtn">Open pipeline</button></div><p style="font-family:Jost,sans-serif;font-size:10px;color:var(--tx3);margin:8px 0 0">Templates shown: '+FM.n(filtered.length)+' of '+FM.n(templates.length)+'. '+(selectedTemplateName?('Expanded: '+H(selectedTemplateName)):'Select a template to expand')+'</p></div></div>';
+  h+='<div class="tpl-card"><h4>Template library</h4><p style="font-family:Jost,sans-serif;font-size:10px;color:var(--tx3);margin-top:4px">Click a template to expand a full email preview. One expanded at a time.</p>';
   if(!filtered.length)h+='<p style="font-family:Jost,sans-serif;font-size:11px;color:var(--tx2)">No templates match your filter.</p>';
   for(var i=0;i<filtered.length;i++){
-    var tp=filtered[i],preview=fillTemplate(tp,vars);
-    h+='<div class="tpl-template'+(templateView.selectedId===tp.id?' is-selected':'')+'" data-tpl-select="'+H(tp.id)+'" data-tpl-card="'+H(tp.id)+'" style="'+(templateView.selectedId===tp.id?'border-color:rgba(17,138,169,.35);box-shadow:0 10px 20px rgba(17,138,169,.08)':'')+'"><div class="tpl-template-title"><div><div class="tpl-template-name">'+H(tp.name)+'</div><div class="tpl-template-meta" data-tpl-meta="'+H(tp.id)+'">'+H(tp.cat)+' · Best for: '+H(tp.intent)+(templateView.selectedId===tp.id?' · Selected':'')+'</div></div><span class="news-tag">'+H(tp.cat.toUpperCase())+'</span></div><p data-tpl-body="'+H(tp.id)+'" style="white-space:pre-wrap;font-family:Jost,sans-serif;font-size:11px;line-height:1.58;color:var(--tx2);margin:8px 0 0">'+H(preview)+'</p><div class="tpl-actions"><button class="tpl-btn" data-tpl-copy="'+H(tp.id)+'">COPY TEMPLATE</button><button class="tpl-btn" data-tpl-copy-subject="'+H(tp.id)+'">COPY SUBJECT</button><button class="tpl-btn" data-tpl-use-news="1">OPEN NEWSROOM</button></div></div>';
+    var tp=filtered[i],preview=fillTemplate(tp,vars),parts=splitEmailPreview(preview),isOpen=templateView.selectedId===tp.id;
+    h+='<div class="tpl-template'+(isOpen?' is-selected':'')+'" data-tpl-select="'+H(tp.id)+'" data-tpl-card="'+H(tp.id)+'" style="'+(isOpen?'border-color:rgba(17,138,169,.35);box-shadow:0 10px 20px rgba(17,138,169,.08)':'')+'"><div class="tpl-template-title"><div><div class="tpl-template-name">'+H(tp.name)+'</div><div class="tpl-template-meta" data-tpl-meta="'+H(tp.id)+'">'+H(tp.cat)+' · Use when: '+H(tp.intent)+(isOpen?' · Expanded':'')+'</div></div><span class="news-tag">'+H(tp.cat.toUpperCase())+'</span></div><div class="tpl-template-summary">'+H(parts.subject||'No subject provided')+'</div><div class="tpl-template-preview'+(isOpen?' is-open':'')+'" data-tpl-preview="'+H(tp.id)+'"><div class="tpl-email-subject">Subject: '+H(parts.subject||'Follow-up')+'</div><div class="tpl-email-body" data-tpl-body="'+H(tp.id)+'">'+H((parts.greeting?parts.greeting+'\\n\\n':'')+(parts.body||'')+(parts.signoff?'\\n\\n'+parts.signoff:''))+'</div><div class="tpl-actions"><button class="tpl-btn" data-tpl-copy="'+H(tp.id)+'">Copy full email</button><button class="tpl-btn" data-tpl-copy-subject="'+H(tp.id)+'">Copy subject</button><button class="tpl-btn" data-tpl-use-news="1">Open newsroom</button></div></div></div>';
   }
   h+='</div></div>';
   el.innerHTML=h;
@@ -2919,16 +2955,23 @@ function rTemplates(){
       card.classList.toggle('is-selected',active);
       card.style.borderColor=active?'rgba(17,138,169,.35)':'';
       card.style.boxShadow=active?'0 10px 20px rgba(17,138,169,.08)':'';
+      var pv=card.querySelector('[data-tpl-preview]');
+      if(pv)pv.classList.toggle('is-open',active);
       var meta=card.querySelector('[data-tpl-meta]');
       var tp=byId[id];
-      if(meta&&tp)meta.textContent=tp.cat+' · Best for: '+tp.intent+(active?' · Selected':'');
+      if(meta&&tp)meta.textContent=tp.cat+' · Use when: '+tp.intent+(active?' · Expanded':'');
     });
   }
   function refreshPreviewBodies(){
     Object.keys(byId).forEach(function(id){
+      var summaryEl=document.querySelector('[data-tpl-card=\"'+id+'\"] .tpl-template-summary');
       var bodyEl=document.querySelector('[data-tpl-body=\"'+id+'\"]');
       if(!bodyEl)return;
-      bodyEl.textContent=fillTemplate(byId[id],currentVars);
+      var rendered=fillTemplate(byId[id],currentVars),parts=splitEmailPreview(rendered);
+      if(summaryEl)summaryEl.textContent=parts.subject||'Follow-up';
+      bodyEl.textContent=(parts.greeting?parts.greeting+'\n\n':'')+(parts.body||'')+(parts.signoff?'\n\n'+parts.signoff:'');
+      var subjectEl=document.querySelector('[data-tpl-preview=\"'+id+'\"] .tpl-email-subject');
+      if(subjectEl)subjectEl.textContent='Subject: '+(parts.subject||'Follow-up');
     });
   }
   function collectVars(){
@@ -2945,7 +2988,7 @@ function rTemplates(){
   document.querySelectorAll('[data-tpl-select]').forEach(function(card){card.addEventListener('click',function(e){if(e.target.closest('button'))return;templateView.selectedId=this.dataset.tplSelect||'';updateSelectionUI()})});
   var applyBtn=document.getElementById('tplApplyVars');if(applyBtn)applyBtn.addEventListener('click',function(){collectVars();refreshPreviewBodies();updateSelectionUI();toast('Preview updated','info')});
   var saveBtn=document.getElementById('tplSaveDefaults');if(saveBtn)saveBtn.addEventListener('click',function(){collectVars();UI_PREFS.defaultContactName=currentVars.first_name;UI_PREFS.defaultCompanyName=currentVars.company_name;UI_PREFS.templateSignature=currentVars.signature;saveUIPrefs();toast('Template defaults saved','success')});
-  document.querySelectorAll('[data-tpl-copy]').forEach(function(btn){btn.addEventListener('click',function(){collectVars();var tp=byId[this.dataset.tplCopy];if(!tp)return;templateView.selectedId=tp.id;var body=fillTemplate(tp,currentVars);copyText(body,'Template copied')})});
+  document.querySelectorAll('[data-tpl-copy]').forEach(function(btn){btn.addEventListener('click',function(){collectVars();var tp=byId[this.dataset.tplCopy];if(!tp)return;templateView.selectedId=tp.id;var body=fillTemplate(tp,currentVars);copyText(body,'Email draft copied');updateSelectionUI()})});
   document.querySelectorAll('[data-tpl-copy-subject]').forEach(function(btn){btn.addEventListener('click',function(){collectVars();var tp=byId[this.dataset.tplCopySubject];if(!tp)return;templateView.selectedId=tp.id;var body=fillTemplate(tp,currentVars);var m=body.match(/^Subject:\\s*(.*)$/m);var subject=m?m[1]:'Follow-up';copyText(subject,'Subject line copied')})});
   var copyAll=document.getElementById('tplCopyAll');if(copyAll)copyAll.addEventListener('click',function(){collectVars();if(!filtered.length)return;var target=byId[templateView.selectedId]||filtered[0];copyText(fillTemplate(target,currentVars),'Selected template copied')});
   document.querySelectorAll('[data-tpl-use-news]').forEach(function(btn){btn.addEventListener('click',function(){go('news')})});
@@ -4308,8 +4351,7 @@ document.addEventListener('keydown',function(e){
   }
 
   if(e.key>='1'&&e.key<='9'&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
-    var tabs=['today','tbl','pipe','alerts','news','dash','hm','templates','analyze'];
-    go(tabs[parseInt(e.key)-1]);
+    go(tabIds[parseInt(e.key)-1]);
     e.preventDefault();
     return;
   }
