@@ -1340,6 +1340,23 @@ function toast(msg,type){
   box.appendChild(t);
   setTimeout(function(){t.classList.add('out');setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t)},300)},2500);
 }
+function copyText(text,onSuccess){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    return navigator.clipboard.writeText(text).then(function(){if(onSuccess)toast(onSuccess,'success')}).catch(function(){toast('Clipboard blocked in this browser','warn')});
+  }
+  try{
+    var ta=document.createElement('textarea');
+    ta.value=text;
+    ta.style.position='fixed';
+    ta.style.left='-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok=document.execCommand('copy');
+    document.body.removeChild(ta);
+    if(ok){if(onSuccess)toast(onSuccess,'success')}else toast('Clipboard unavailable in this browser','warn');
+  }catch(e){toast('Clipboard unavailable in this browser','warn')}
+  return Promise.resolve();
+}
 
 var enrichCache=(function(){try{return JSON.parse(localStorage.getItem('mammini_enrich')||'{}')}catch(e){return{}}})();
 function saveEnrichCache(){try{localStorage.setItem('mammini_enrich',JSON.stringify(enrichCache))}catch(e){}}
@@ -2199,7 +2216,7 @@ this.style.borderColor=saved?'var(--acc)':'var(--brd2)';
 toast(saved?'Added to shortlist':'Removed from shortlist',saved?'success':'info');
 rTR();
 })}
-document.getElementById('qa-copy').addEventListener('click',function(){var t=p[0]+'\n'+p[1]+'\n'+p[2]+', CA '+p[3]+'\nEIN: '+p[14]+'\nAssets: '+FM.usd(p[4])+'\nParticipants: '+p[7]+'\nRK: '+(p[18]||'Unknown')+'\nScore: '+p[12];navigator.clipboard.writeText(t);toast('Plan info copied to clipboard','success')});
+document.getElementById('qa-copy').addEventListener('click',function(){var t=p[0]+'\n'+p[1]+'\n'+p[2]+', CA '+p[3]+'\nEIN: '+p[14]+'\nAssets: '+FM.usd(p[4])+'\nParticipants: '+p[7]+'\nRK: '+(p[18]||'Unknown')+'\nScore: '+p[12];copyText(t,'Plan info copied to clipboard')});
 document.getElementById('qa-goog').addEventListener('click',function(){window.open('https://www.google.com/search?q='+encodeURIComponent(p[1]+' '+p[2]+' 401k'),'_blank')});
 document.getElementById('qa-li').addEventListener('click',function(){window.open('https://www.linkedin.com/search/results/companies/?keywords='+encodeURIComponent(p[1]),'_blank')});
 document.getElementById('sg').addEventListener('click',function(){gSnap(p)});
@@ -2567,7 +2584,7 @@ function rNews(){
   var ub=document.getElementById('newsUrgentToggle');if(ub)ub.addEventListener('click',function(){newsView.urgentOnly=!newsView.urgentOnly;rNews()});
   document.querySelectorAll('[data-news-open-prospects]').forEach(function(btn){btn.addEventListener('click',function(){go('tbl')})});
   document.querySelectorAll('[data-news-to-alerts]').forEach(function(btn){btn.addEventListener('click',function(){go('alerts')})});
-  document.querySelectorAll('[data-news-brief]').forEach(function(btn){btn.addEventListener('click',function(){var it=byId[this.dataset.newsBrief];if(!it)return;var msg=buildBrief(it);navigator.clipboard.writeText(msg).then(function(){toast('Brief copied for outreach','success')}).catch(function(){toast('Clipboard blocked in this browser','warn')})})});
+  document.querySelectorAll('[data-news-brief]').forEach(function(btn){btn.addEventListener('click',function(){var it=byId[this.dataset.newsBrief];if(!it)return;var msg=buildBrief(it);copyText(msg,'Brief copied for outreach')})});
   var tb=document.getElementById('newsLeadTemplatesBtn');if(tb)tb.addEventListener('click',function(){go('templates')});
 }
 function buildAlerts(){
@@ -2678,18 +2695,23 @@ function rTemplates(){
     if(!q)return true;
     return (tp.name+' '+tp.intent+' '+tp.body).toLowerCase().indexOf(q)>=0;
   });
+  if(!templateView.selectedId||!filtered.some(function(tp){return tp.id===templateView.selectedId;})){
+    templateView.selectedId=filtered.length?filtered[0].id:'';
+  }
+  var selectedTemplateName='';
+  for(var sn=0;sn<filtered.length;sn++){if(filtered[sn].id===templateView.selectedId){selectedTemplateName=filtered[sn].name;break}}
   var categories=['all'];for(var c=0;c<templates.length;c++){if(categories.indexOf(templates[c].cat)<0)categories.push(templates[c].cat)}
   var h='';
   h+='<div class="tpl-shell"><div class="tpl-hero"><div class="module-kicker">You-focused advisor communication</div><div class="module-title">Template Studio</div><div class="module-sub">Create warm, practical outreach in seconds. Every button has one purpose: personalize, preview, copy, or route your next action.</div></div>';
   h+='<div class="tpl-grid"><div class="tpl-card"><h4>Personalization profile</h4><div class="tpl-input-grid"><input class="tpl-input" id="tplFirstName" value="'+H(vars.first_name)+'" placeholder="Contact first name"><input class="tpl-input" id="tplCompanyName" value="'+H(vars.company_name)+'" placeholder="Plan sponsor / company"><input class="tpl-input" id="tplMeetingWindow" value="'+H(vars.meeting_window)+'" placeholder="e.g. 15-minute"><input class="tpl-input" id="tplSignalName" value="'+H(vars.signal_name)+'" placeholder="Primary signal"></div><div style="margin-top:8px"><textarea class="tpl-input" id="tplSignature" style="min-height:74px;resize:vertical" placeholder="Warmly,\\n'+H(UI_PREFS.advisorName)+'">'+H(vars.signature)+'</textarea></div><div class="tpl-actions"><button class="tpl-btn" id="tplApplyVars">APPLY TO PREVIEW</button><button class="tpl-btn" id="tplSaveDefaults">SAVE AS DEFAULTS</button><button class="tpl-btn" id="tplOpenSettings">OPEN SETTINGS</button></div></div>';
   h+='<div class="tpl-card"><h4>Library controls</h4><div class="tpl-cat-row">';
   for(var ci=0;ci<categories.length;ci++){var cat=categories[ci],label=cat==='all'?'All templates':cat;h+='<button class="tpl-cat-btn'+(templateView.category===cat?' active':'')+'" data-tpl-cat="'+H(cat)+'">'+H(label)+'</button>'}
-  h+='</div><div style="margin-top:8px"><input class="tpl-input" id="tplSearchInput" placeholder="Search templates by intent or language..." value="'+H(templateView.query||'')+'"></div><div class="tpl-actions"><button class="tpl-btn" id="tplCopyAll">COPY CURRENT PREVIEW</button><button class="tpl-btn" id="tplAnalyzeBtn">OPEN FILING ANALYZER</button><button class="tpl-btn" id="tplPipeBtn">OPEN PIPELINE</button></div><p style="font-family:Jost,sans-serif;font-size:10px;color:var(--tx3);margin:8px 0 0">Templates shown: '+FM.n(filtered.length)+' of '+FM.n(templates.length)+'.</p></div></div>';
+  h+='</div><div style="margin-top:8px"><input class="tpl-input" id="tplSearchInput" placeholder="Search templates by intent or language..." value="'+H(templateView.query||'')+'"></div><div class="tpl-actions"><button class="tpl-btn" id="tplCopyAll">COPY SELECTED TEMPLATE</button><button class="tpl-btn" id="tplAnalyzeBtn">OPEN FILING ANALYZER</button><button class="tpl-btn" id="tplPipeBtn">OPEN PIPELINE</button></div><p style="font-family:Jost,sans-serif;font-size:10px;color:var(--tx3);margin:8px 0 0">Templates shown: '+FM.n(filtered.length)+' of '+FM.n(templates.length)+'. '+(selectedTemplateName?('Selected: '+H(selectedTemplateName)):'')+'</p></div></div>';
   h+='<div class="tpl-card"><h4>Template previews</h4>';
   if(!filtered.length)h+='<p style="font-family:Jost,sans-serif;font-size:11px;color:var(--tx2)">No templates match your filter.</p>';
   for(var i=0;i<filtered.length;i++){
     var tp=filtered[i],preview=fillTemplate(tp,vars);
-    h+='<div class="tpl-template"><div class="tpl-template-title"><div><div class="tpl-template-name">'+H(tp.name)+'</div><div class="tpl-template-meta">'+H(tp.cat)+' · '+H(tp.intent)+'</div></div><span class="news-tag">'+H(tp.cat.toUpperCase())+'</span></div><p style="white-space:pre-wrap;font-family:Jost,sans-serif;font-size:11px;line-height:1.58;color:var(--tx2);margin:8px 0 0">'+H(preview)+'</p><div class="tpl-actions"><button class="tpl-btn" data-tpl-copy="'+H(tp.id)+'">COPY TEMPLATE</button><button class="tpl-btn" data-tpl-copy-subject="'+H(tp.id)+'">COPY SUBJECT</button><button class="tpl-btn" data-tpl-use-news="1">OPEN NEWSROOM</button></div></div>';
+    h+='<div class="tpl-template'+(templateView.selectedId===tp.id?' is-selected':'')+'" data-tpl-select="'+H(tp.id)+'" style="'+(templateView.selectedId===tp.id?'border-color:rgba(17,138,169,.35);box-shadow:0 10px 20px rgba(17,138,169,.08)':'')+'"><div class="tpl-template-title"><div><div class="tpl-template-name">'+H(tp.name)+'</div><div class="tpl-template-meta">'+H(tp.cat)+' · '+H(tp.intent)+(templateView.selectedId===tp.id?' · Selected':'')+'</div></div><span class="news-tag">'+H(tp.cat.toUpperCase())+'</span></div><p style="white-space:pre-wrap;font-family:Jost,sans-serif;font-size:11px;line-height:1.58;color:var(--tx2);margin:8px 0 0">'+H(preview)+'</p><div class="tpl-actions"><button class="tpl-btn" data-tpl-copy="'+H(tp.id)+'">COPY TEMPLATE</button><button class="tpl-btn" data-tpl-copy-subject="'+H(tp.id)+'">COPY SUBJECT</button><button class="tpl-btn" data-tpl-use-news="1">OPEN NEWSROOM</button></div></div>';
   }
   h+='</div></div>';
   el.innerHTML=h;
@@ -2705,11 +2727,12 @@ function rTemplates(){
   var byId={};for(var bi=0;bi<templates.length;bi++)byId[templates[bi].id]=templates[bi];
   document.querySelectorAll('[data-tpl-cat]').forEach(function(btn){btn.addEventListener('click',function(){templateView.category=this.dataset.tplCat||'all';rTemplates()})});
   var si=document.getElementById('tplSearchInput');if(si)si.addEventListener('input',function(){templateView.query=this.value||'';rTemplates()});
+  document.querySelectorAll('[data-tpl-select]').forEach(function(card){card.addEventListener('click',function(e){if(e.target.closest('button'))return;templateView.selectedId=this.dataset.tplSelect||'';rTemplates()})});
   var applyBtn=document.getElementById('tplApplyVars');if(applyBtn)applyBtn.addEventListener('click',function(){collectVars();rTemplates();toast('Preview updated','info')});
   var saveBtn=document.getElementById('tplSaveDefaults');if(saveBtn)saveBtn.addEventListener('click',function(){collectVars();UI_PREFS.defaultContactName=currentVars.first_name;UI_PREFS.defaultCompanyName=currentVars.company_name;UI_PREFS.templateSignature=currentVars.signature;saveUIPrefs();toast('Template defaults saved','success')});
-  document.querySelectorAll('[data-tpl-copy]').forEach(function(btn){btn.addEventListener('click',function(){collectVars();var tp=byId[this.dataset.tplCopy];if(!tp)return;var body=fillTemplate(tp,currentVars);navigator.clipboard.writeText(body).then(function(){toast('Template copied','success')}).catch(function(){toast('Clipboard blocked in this browser','warn')})})});
-  document.querySelectorAll('[data-tpl-copy-subject]').forEach(function(btn){btn.addEventListener('click',function(){collectVars();var tp=byId[this.dataset.tplCopySubject];if(!tp)return;var body=fillTemplate(tp,currentVars);var m=body.match(/^Subject:\\s*(.*)$/m);var subject=m?m[1]:'Follow-up';navigator.clipboard.writeText(subject).then(function(){toast('Subject line copied','success')}).catch(function(){toast('Clipboard blocked in this browser','warn')})})});
-  var copyAll=document.getElementById('tplCopyAll');if(copyAll)copyAll.addEventListener('click',function(){collectVars();if(!filtered.length)return;navigator.clipboard.writeText(fillTemplate(filtered[0],currentVars)).then(function(){toast('Lead preview copied','success')}).catch(function(){toast('Clipboard blocked in this browser','warn')})});
+  document.querySelectorAll('[data-tpl-copy]').forEach(function(btn){btn.addEventListener('click',function(){collectVars();var tp=byId[this.dataset.tplCopy];if(!tp)return;templateView.selectedId=tp.id;var body=fillTemplate(tp,currentVars);copyText(body,'Template copied')})});
+  document.querySelectorAll('[data-tpl-copy-subject]').forEach(function(btn){btn.addEventListener('click',function(){collectVars();var tp=byId[this.dataset.tplCopySubject];if(!tp)return;templateView.selectedId=tp.id;var body=fillTemplate(tp,currentVars);var m=body.match(/^Subject:\\s*(.*)$/m);var subject=m?m[1]:'Follow-up';copyText(subject,'Subject line copied')})});
+  var copyAll=document.getElementById('tplCopyAll');if(copyAll)copyAll.addEventListener('click',function(){collectVars();if(!filtered.length)return;var target=byId[templateView.selectedId]||filtered[0];copyText(fillTemplate(target,currentVars),'Selected template copied')});
   document.querySelectorAll('[data-tpl-use-news]').forEach(function(btn){btn.addEventListener('click',function(){go('news')})});
   var ab=document.getElementById('tplAnalyzeBtn');if(ab)ab.addEventListener('click',function(){go('analyze')});
   var pb=document.getElementById('tplPipeBtn');if(pb)pb.addEventListener('click',function(){go('pipe')});
